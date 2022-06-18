@@ -30,6 +30,9 @@ namespace ExpertMultimedia
 		//Bitmap bmpFFMPEG=null;
 		RCallback callbackNow=null;
 		//public bool bClosing=false;
+		string profile = Environment.GetEnvironmentVariable("USERPROFILE");
+		string videos = null;
+		string devVideoPath = null;
 		public RotoCanvas rotocanvasNow=null;
 		
 		public MainForm()
@@ -38,6 +41,8 @@ namespace ExpertMultimedia
 			//
 			// The InitializeComponent() call is required for Windows Forms designer support.
 			//
+			videos = Path.Combine(this.profile, "Videos");
+			devVideoPath = Path.Combine(videos, "PGS_Demo_2000_found-teranex-720p.mp4");
 			InitializeComponent();
 
 			callbackNow=new RCallback();
@@ -48,7 +53,6 @@ namespace ExpertMultimedia
 			callbackNow.formX=this;
 			callbackNow.lbX=this.lbOut;
 			callbackNow.sbX=this.tbStatus;
-			
 		}
 		
 		void ShowExn(Exception exn, string sParticiple, string sNoun) {
@@ -58,6 +62,7 @@ namespace ExpertMultimedia
 		void MainFormLoad(object sender, EventArgs e) {
 			string sFileTheoretical=@"D:\Videos\Projects\Rebel Assault IX\RAIX2b\Scene04 (Speeder Bikes)\shot1 (from left)\2b3_3 manual deshake\RAIX2b-scene-speederbikes-shot1-0001.png";
 			if (File.Exists(sFileTheoretical)) tbInput.Text=sFileTheoretical;
+			else if (File.Exists(devVideoPath)) this.OpenVideo(devVideoPath);
 		}
 
 		void BtnBrowseClick(object sender, EventArgs e)
@@ -120,22 +125,12 @@ namespace ExpertMultimedia
 			ofd.Title = "Open Video";
 			// string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 			// ^ recent versions of C# only
-			string profile = Environment.GetEnvironmentVariable("USERPROFILE");
-			string videos = Path.Combine(profile, "Videos");
 			ofd.InitialDirectory = videos;
 			result = ofd.ShowDialog();
 			if (result != DialogResult.OK) {
 				return;
 			}
-			tbInput.Text = ofd.FileName;
-			rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
-			this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
-			this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
-			int frame = rotocanvasNow.get_CurrentIndex();
-			if (frame < 0) {
-				frame = 0;
-			}
-			this.trackbarFrame.Value=frame;
+			this.OpenVideo(ofd.FileName);
 		}
 		
 		void OpenImageSequenceToolStripMenuItemClick(object sender, EventArgs e)
@@ -189,6 +184,18 @@ namespace ExpertMultimedia
 //				}
 				e.Graphics.DrawImageUnscaled(rotocanvasNow.bmpBack,pTopLeft);
 			}
+		}
+		
+		void OpenVideo(string path) {
+			tbInput.Text = path;
+			rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
+			this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
+			this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
+			int frame = rotocanvasNow.get_CurrentIndex();
+			if (frame < 0) {
+				frame = 0;
+			}
+			this.trackbarFrame.Value=frame;			
 		}
 		
 	}//end MainForm
