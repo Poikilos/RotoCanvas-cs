@@ -25,17 +25,23 @@ namespace ExpertMultimedia {
 		private Bitmap bmpFFMPEG=null;
 		private int iFrame=-2;
 		private int FrameLastDrawn=-1;
+		public static string tempsDir = System.IO.Path.GetTempPath();
+		private string myTempDir=null;
 		
 		public RImage riFrame=null;
 		public RImage riInterface=null;
 		public bool bCancel=false;
 		public Bitmap bmpBack=new Bitmap(640,480,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-		public static string sCommand_ffmpeg=@"E:\progs\video\gui4ffmpeg\ffmpeg.exe";
+		public static string sCommand_ffmpeg = @"C:\PortableApps\winbuilds\bin\ffmpeg.exe"; // @"E:\progs\video\gui4ffmpeg\ffmpeg.exe";
 		#endregion variables
 		
 		
 		#region constructors
 		public RotoCanvas() {
+			this.myTempDir = Path.Combine(RotoCanvas.tempsDir, "RotoCanvas");
+			if (!Directory.Exists(this.myTempDir)) {
+				Directory.CreateDirectory(this.myTempDir);
+			}
 		}
 		#endregion constructors
 		
@@ -225,77 +231,88 @@ namespace ExpertMultimedia {
 			bool bDropFrame=true;
 			string sTimeCode="";
 			//System.Diagnostics.ProcessStartInfo psi=null;
-			//TODO: check frame accuracy (do automatic image comparison of a whole MJPEG animation [compare to MediaStudio png sequence output]?)
+			
+			// TODO: Test via image comparison of a whole MJPEG animation [output from sequential frame dump command].
+			//   THIS GETS ALL FRAMES USING ONE CALL TO FFMPEG:
+			//   ffmpeg -i input.dv -r 25 -f image2 images%05d.png
+			
 			//"+iFrame.ToString()+"
 			//ffmpeg -i swing.avi -s 320×240 -vframes 1 -f singlejpeg swing.jpg
 			//ffmpeg -i swing.avi -s 320×240 -vframes 1 -f mjpeg swing.jpg
 			//-ss 0:0:20 gets frame at a time signature
-			//THIS GETS ALL FRAMES USING ONE CALL TO FFMPEG:
-			//ffmpeg -i input.dv -r 25 -f image2 images%05d.png
 			//MY VERSION:
 			//ffmpeg "-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg \""+DestBase_FullName+"%05d.jpg\""
 			//%05d is for 5 digits
-			try {
-				/*
-				System.Diagnostics.Process procFFMPEG=new System.Diagnostics.Process();
-				procFFMPEG.StartInfo.FileName=sCommand_ffmpeg;//psi=new System.Diagnostics.ProcessStartInfo(sCommand_ffmpeg);
-				procFFMPEG.StartInfo.UseShellExecute=false; 
-				procFFMPEG.StartInfo.RedirectStandardOutput=true;//psi.RedirectStandardOutput = true;
-				procFFMPEG.StartInfo.RedirectStandardError=true;//psi.RedirectStandardError = true;
-				procFFMPEG.StartInfo.WindowStyle=System.Diagnostics.ProcessWindowStyle.Hidden;// psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-				procFFMPEG.StartInfo.UseShellExecute=false;//psi.UseShellExecute = false;
-				//TODO:? -s 640x480 sets size
-				//TODO:? ask user for framerate?
-				//-r 30 forces 30fps
-				//-y overwrites destination
-				sTimeCode=RConvert.FrameToHMSDotMs(iFrame,iFPS,true);
-				procFFMPEG.StartInfo.Arguments="-ss "+sTimeCode+" -i \""+SourceFile_FullName+"\" -r "+dFPS.ToString("#.#")+" -vframes 1 -f mjpeg -";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
-				//Environment.CurrentDirectory=sDestFolder;
-				//psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
-				//ImageConverter ic=new ImageConverter();
-				
-				
-				callbackNow.WriteLine("Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+procFFMPEG.StartInfo.Arguments);//+psi.Arguments);
-				procFFMPEG.Start(); //procFFMPEG = System.Diagnostics.Process.Start(psi);
-				callbackNow.WriteLine("waiting for ffmpeg...");
-				//This just waits FOREVER FOR AN UNKNOWN REASON (only problematic when '-' is used at end of command to redirect ffmpeg file output to standard output)
-				procFFMPEG.WaitForExit();
-				callbackNow.WriteLine("getting bitmap stream...");
-				StreamReader streamIn = procFFMPEG.StandardOutput;
-				//BinaryReader br=new BinaryReader(streamIn);
-				//MemoryStream memsIn=new MemoryStream(byarrData);
-				//Image img=Image.FromStream(streamIn);
-				callbackNow.WriteLine("getting bitmap...");
-				bmpReturn=(Bitmap)Bitmap.FromStream(streamIn.BaseStream);
-				*/
-				
-				//bmpReturn=new Bitmap(
-				callbackNow.WriteLine("returning bitmap.");
-				
-				//StreamReader streamInErr=procFFMPEG.StandardError;
-				//string sErr=streamInErr.ReadToEnd();
+		
+			
+			System.Diagnostics.Process procFFMPEG = new System.Diagnostics.Process();
+			procFFMPEG.StartInfo.FileName = sCommand_ffmpeg;//psi=new System.Diagnostics.ProcessStartInfo(sCommand_ffmpeg);
+			if (sCommand_ffmpeg.Contains(char.ToString(Path.DirectorySeparatorChar))) {
+				// It is a full path rather using the system path, so fail if not present.
+				if (!File.Exists(sCommand_ffmpeg)) {
+					callbackNow.UpdateStatus("Error: \""+sCommand_ffmpeg+"\" does not exist.");
+					return null;
+				}
+			}
+			procFFMPEG.StartInfo.UseShellExecute=false; 
+			procFFMPEG.StartInfo.RedirectStandardOutput=true;//psi.RedirectStandardOutput = true;
+			procFFMPEG.StartInfo.RedirectStandardError=true;//psi.RedirectStandardError = true;
+			procFFMPEG.StartInfo.WindowStyle=System.Diagnostics.ProcessWindowStyle.Hidden;// psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+			procFFMPEG.StartInfo.UseShellExecute=false;//psi.UseShellExecute = false;
+			//TODO:? -s 640x480 sets size
+			//TODO:? ask user for framerate?
+			//-r 30 forces 30fps
+			//-y overwrites destination
+			sTimeCode=RConvert.FrameToHMSDotMs(iFrame,iFPS,true);
+			procFFMPEG.StartInfo.Arguments="-ss "+sTimeCode+" -i \""+SourceFile_FullName+"\" -r "+dFPS.ToString("#.#")+" -vframes 1 -f mjpeg -";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
+			//Environment.CurrentDirectory=sDestFolder;
+			//psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
+			//ImageConverter ic=new ImageConverter();
+			
+			
+			callbackNow.WriteLine("Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+procFFMPEG.StartInfo.Arguments);//+psi.Arguments);
+			procFFMPEG.Start(); //procFFMPEG = System.Diagnostics.Process.Start(psi);
+			callbackNow.WriteLine("waiting for ffmpeg...");
+			//This just waits FOREVER FOR AN UNKNOWN REASON (only problematic when '-' is used at end of command to redirect ffmpeg file output to standard output)
+			procFFMPEG.WaitForExit();
+			callbackNow.WriteLine("getting bitmap stream...");
+			StreamReader streamIn = procFFMPEG.StandardOutput;
+			//BinaryReader br=new BinaryReader(streamIn);
+			//MemoryStream memsIn=new MemoryStream(byarrData);
+			//Image img=Image.FromStream(streamIn);
+			callbackNow.WriteLine("getting bitmap...");
+			bmpReturn=(Bitmap)Bitmap.FromStream(streamIn.BaseStream);
+			
+			
+			//bmpReturn=new Bitmap(
+			callbackNow.WriteLine("returning bitmap.");
+			
+			//StreamReader streamInErr=procFFMPEG.StandardError;
+			//string sErr=streamInErr.ReadToEnd();
+			//int iCursor=0;
+			//string sLine;
+			//while ( (sLine=RString.StringReadLine(sErr,ref iCursor)) != null ) {
+			//	callbackNow.WriteLine(sLine);
+			//}
+			
+			//if (procFFMPEG.HasExited) {
+				//string output = streamIn.ReadToEnd();
+				//string sLine="";
 				//int iCursor=0;
-				//string sLine;
-				//while ( (sLine=RString.StringReadLine(sErr,ref iCursor)) != null ) {
+				//while ( (sLine=RString.StringReadLine(output,ref iCursor)) != null ) {
 				//	callbackNow.WriteLine(sLine);
 				//}
-				
-				//if (procFFMPEG.HasExited) {
-					//string output = streamIn.ReadToEnd();
-					//string sLine="";
-					//int iCursor=0;
-					//while ( (sLine=RString.StringReadLine(output,ref iCursor)) != null ) {
-					//	callbackNow.WriteLine(sLine);
-					//}
-				//}
-				//if (DestFrameNow_FullName!=null&&DestFrameNow_FullName!=""&&File.Exists(DestFrameNow_FullName)
-				//    &&(new FileInfo(DestFrameNow_FullName)).Length>0) {
-				//	bGood=true;
-				//}
-			}
+			//}
+			//if (DestFrameNow_FullName!=null&&DestFrameNow_FullName!=""&&File.Exists(DestFrameNow_FullName)
+			//    &&(new FileInfo(DestFrameNow_FullName)).Length>0) {
+			//	bGood=true;
+			//}
+			/*
+			
 			catch (Exception exn) {
 				callbackNow.WriteLine("could not finish GetFrameBitmap("+iFrame.ToString()+"): "+exn.ToString()); //ShowExn(exn,"saving frame","RotoCanvas GetFrameBitmap("+iFrame.ToString()+")");
 			}
+			*/
 			return bmpReturn;
 		}//end GetFrameBitmap
 
@@ -303,61 +320,74 @@ namespace ExpertMultimedia {
 		public bool GotoFrame(int iFrameX, int iMinDigits, RCallback callbackNow) {//formerly DrawFrame
 			bool bGood=false;
 			string sFileNow="";
-			try {
-				System.Drawing.Imaging.ImageFormat imgfmt=RImage.ImageFormatFromExt(OpenedFile_Ext);
-				if (imgfmt.Guid!=Guid.Empty) {//imgfmt!=System.Drawing.Imaging.ImageFormat.MemoryBmp) {//image
-					callbackNow.UpdateStatus("Loading frame using image format GUID...");
-					sFileNow=OpenedFile_FullBaseName+(iFrameX).ToString("D"+iMinDigits.ToString())+"."+OpenedFile_Ext;
-					if (File.Exists(sFileNow)) {
-						if (riFrame==null) riFrame=new RImage(sFileNow,4);
-						else bGood=riFrame.Load(sFileNow,4);
-					}
-					//else if (File.Exists(OpenedFile_FullBaseName+"."+OpenedFile_Ext)) {
-					//	riFrame.Load(OpenedFile_FullBaseName+"."+OpenedFile_Ext);
-					//}
-					else {
-						callbackNow.WriteLine("Unable to load "+RReporting.StringMessage(sFileNow,true));
-					}
+		
+			System.Drawing.Imaging.ImageFormat imgfmt = RImage.ImageFormatFromExt(OpenedFile_Ext);
+			if (imgfmt.Guid != Guid.Empty) {//imgfmt!=System.Drawing.Imaging.ImageFormat.MemoryBmp) {//image
+				callbackNow.UpdateStatus("Loading frame using image format GUID "+imgfmt.Guid.ToString()+"...");
+				sFileNow=OpenedFile_FullBaseName+(iFrameX).ToString("D"+iMinDigits.ToString())+"."+OpenedFile_Ext;
+				if (File.Exists(sFileNow)) {
+					if (riFrame==null) riFrame=new RImage(sFileNow,4);
+					else bGood=riFrame.Load(sFileNow,4);
 				}
-				else { //else NOT an image, so try ffmpeg
-					//if (File.Exists(ProgramFolderThenSlash+"tempframe.jpg")) File.Delete(ProgramFolderThenSlash+"tempframe.jpg");
-					
-					//Next 2 lines check whether frame exists!  //TODO: make it into a separate method
-					//this.SaveFrame(ProgramFolderThenSlash+"tempframe.jpg",OpenedFile_FullBaseName+"."+OpenedFile_Ext,this.trackbarFrame.Value);
-					//bGood=File.Exists(ProgramFolderThenSlash+"tempframe.jpg") && ((new FileInfo(ProgramFolderThenSlash+"tempframe.jpg")).Length>0);
-
-					//callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
-					//if (bGood) {
-						callbackNow.UpdateStatus("Frame "+iFrame.ToString()+"...");
-						bmpFFMPEG=GetVideoFrameAsBitmap(OpenedFile_FullBaseName+"."+OpenedFile_Ext,iFrameX,callbackNow);
-						//bmpFFMPEG=new Bitmap(streamIn);
-						riFrame.Load(bmpFFMPEG,4);
-						try {
-							bmpFFMPEG.Dispose();
-							bmpFFMPEG=null;
-						}
-						catch {}
-						try {
-							bmpFFMPEG.Dispose();
-							bmpFFMPEG=null;
-						}
-						catch {}
-						//riFrame.Load(ProgramFolderThenSlash+"tempframe.jpg",4);
-//						if (riFrame.Width>0&&riFrame.Height>0) {
-//							if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
-//								bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-//							}
-//						}
-//						else callbackNow.SetStatus("Could not process frame format {Width:"+riFrame.Width+";"+"Height:"+riFrame.Height+"}");
-					//}
-					//else this.tbStatus.Text="Could not find frame "+iFrame.ToString();
+				//else if (File.Exists(OpenedFile_FullBaseName+"."+OpenedFile_Ext)) {
+				//	riFrame.Load(OpenedFile_FullBaseName+"."+OpenedFile_Ext);
+				//}
+				else {
+					callbackNow.WriteLine("Unable to load "+RReporting.StringMessage(sFileNow,true));
+					return false;
 				}
 				callbackNow.UpdateStatus("Loading frame using image format GUID...OK");
 			}
+			else { //else NOT an image, so try ffmpeg
+				if (File.Exists(myTempDir+"tempframe.jpg")) File.Delete(myTempDir+"tempframe.jpg");
+				
+				//Next 2 lines check whether frame exists!  //TODO: make it into a separate method
+				// this.SaveFrame(myTempDir+"tempframe.jpg", OpenedFile_FullBaseName+"."+OpenedFile_Ext, iFrameX);
+				bGood = true; // bGood=File.Exists(myTempDir+"tempframe.jpg") && ((new FileInfo(myTempDir+"tempframe.jpg")).Length>0);
+
+				callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
+				if (bGood) {
+					callbackNow.UpdateStatus("Frame "+iFrame.ToString()+"...");
+					string framePrefix = OpenedFile_FullBaseName+"."+OpenedFile_Ext;
+					bmpFFMPEG = GetVideoFrameAsBitmap(framePrefix, iFrameX, callbackNow);
+					if (bmpFFMPEG == null) {
+						// Status should already be set by GetVideoFrameAsBitmap in case of an error.
+						// callbackNow.UpdateStatus("Error: \"" + framePrefix + "\" frame " + iFrameX + " couldn't be loaded.");
+						return false;
+					}
+					// bmpFFMPEG=new Bitmap(streamIn);
+					riFrame.Load(bmpFFMPEG,4);
+					try {
+						bmpFFMPEG.Dispose();
+						bmpFFMPEG=null;
+					}
+					catch {}
+					try {
+						bmpFFMPEG.Dispose();
+						bmpFFMPEG=null;
+					}
+					catch {}
+					
+					//riFrame.Load(myTempDir+"tempframe.jpg",4);
+					/*
+					if (riFrame.Width>0&&riFrame.Height>0) {
+						if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
+							bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+						}
+					}
+					else callbackNow.UpdateStatus("Could not process frame format {Width:"+riFrame.Width+";"+"Height:"+riFrame.Height+"}");
+					*/
+				}
+				//else this.tbStatus.Text="Could not find frame "+iFrame.ToString();
+				callbackNow.UpdateStatus("Loading frame using FFMPEG..."+(bGood?"OK":"FAILED"));
+			}
+			
+			/*
 			catch (Exception exn) {
 				callbackNow.UpdateStatus("DrawFrame could not finish: "+exn.ToString());
 				//ShowExn(exn, "drawing frame", "RotoCanvas DrawFrame");
 			}
+			*/
 			return bGood;
 		}//end GotoFrame
 		
