@@ -113,10 +113,29 @@ namespace ExpertMultimedia
 		{
 			cancelToolStripMenuItem.Enabled=true;
 			//GetInputAsync("RotoCanvas.OpenVideo","Choose video file:",new string[]{"OK","Cancel"},MainForm.InputTypeVideo,null);
+			
+			DialogResult result = DialogResult.Cancel;
+			System.Windows.Forms.OpenFileDialog ofd;
+			ofd = new System.Windows.Forms.OpenFileDialog();
+			ofd.Title = "Open Video";
+			// string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+			// ^ recent versions of C# only
+			string profile = Environment.GetEnvironmentVariable("USERPROFILE");
+			string videos = Path.Combine(profile, "Videos");
+			ofd.InitialDirectory = videos;
+			result = ofd.ShowDialog();
+			if (result != DialogResult.OK) {
+				return;
+			}
+			tbInput.Text = ofd.FileName;
 			rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
 			this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
 			this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
-			this.trackbarFrame.Value=rotocanvasNow.get_CurrentIndex();
+			int frame = rotocanvasNow.get_CurrentIndex();
+			if (frame < 0) {
+				frame = 0;
+			}
+			this.trackbarFrame.Value=frame;
 		}
 		
 		void OpenImageSequenceToolStripMenuItemClick(object sender, EventArgs e)

@@ -10,11 +10,11 @@
     <NoStdLib>False</NoStdLib>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <StartWorkingDirectory>..\bin</StartWorkingDirectory>
+    <StartWorkingDirectory>.\bin</StartWorkingDirectory>
     <SourceAnalysisOverrideSettingsFile>C:\Users\Owner\AppData\Roaming\ICSharpCode/SharpDevelop3.0\Settings.SourceAnalysis</SourceAnalysisOverrideSettingsFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>.\bin\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>Full</DebugType>
     <Optimize>False</Optimize>
@@ -23,7 +23,7 @@
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>.\bin\</OutputPath>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>None</DebugType>
     <Optimize>True</Optimize>
@@ -46,58 +46,58 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\RetroEngine\src\RAnim_bgra32.cs">
+    <Compile Include="..\RetroEngine-cs\RAnim_bgra32.cs">
       <Link>RAnim_bgra32.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RBrush_bgra32.cs">
+    <Compile Include="..\RetroEngine-cs\RBrush_bgra32.cs">
       <Link>RBrush_bgra32.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RConvert.cs">
+    <Compile Include="..\RetroEngine-cs\RConvert.cs">
       <Link>RConvert.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RDataSet.cs">
+    <Compile Include="..\RetroEngine-cs\RDataSet.cs">
       <Link>RDataSet.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RFile.cs">
+    <Compile Include="..\RetroEngine-cs\RFile.cs">
       <Link>RFile.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RGradient_bgra32.cs">
+    <Compile Include="..\RetroEngine-cs\RGradient_bgra32.cs">
       <Link>RGradient_bgra32.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RHyperText.cs">
+    <Compile Include="..\RetroEngine-cs\RHyperText.cs">
       <Link>RHyperText.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RImage_bgra32.cs">
+    <Compile Include="..\RetroEngine-cs\RImage_bgra32.cs">
       <Link>RImage_bgra32.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RMath.cs">
+    <Compile Include="..\RetroEngine-cs\RMath.cs">
       <Link>RMath.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RMemory.cs">
+    <Compile Include="..\RetroEngine-cs\RMemory.cs">
       <Link>RMemory.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RPlatform.cs">
+    <Compile Include="..\RetroEngine-cs\RPlatform.cs">
       <Link>RPlatform.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RPlatform.Framework.cs">
+    <Compile Include="..\RetroEngine-cs\RPlatform.Framework.cs">
       <Link>RPlatform.Framework.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RReporting.cs">
+    <Compile Include="..\RetroEngine-cs\RReporting.cs">
       <Link>RReporting.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RString.cs">
+    <Compile Include="..\RetroEngine-cs\RString.cs">
       <Link>RString.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RTable.cs">
+    <Compile Include="..\RetroEngine-cs\RTable.cs">
       <Link>RTable.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\RTypes.cs">
+    <Compile Include="..\RetroEngine-cs\RTypes.cs">
       <Link>RTypes.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\StringQ.cs">
+    <Compile Include="..\RetroEngine-cs\StringQ.cs">
       <Link>StringQ.cs</Link>
     </Compile>
-    <Compile Include="..\..\RetroEngine\src\Var.cs">
+    <Compile Include="..\RetroEngine-cs\Var.cs">
       <Link>Var.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
