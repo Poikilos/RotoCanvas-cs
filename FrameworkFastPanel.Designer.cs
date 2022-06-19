@@ -228,7 +228,7 @@ namespace ExpertMultimedia
                 // paint the picture in from the back buffer into the form draw area
                 ManagedBackBuffer.Render(ControlGraphics);
 			}
-			catch (Exception Exp) { Console.WriteLine(Exp.Message); }
+			catch (Exception Exp) { Console.Error.WriteLine(Exp.Message); }
 		}
 
 		private void LunchGraphicTest(Graphics TempGraphics)

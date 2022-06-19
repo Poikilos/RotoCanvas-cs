@@ -9,6 +9,7 @@
 using System;
 using System.IO;
 using System.Drawing;
+using System.Threading.Tasks;
 
 namespace ExpertMultimedia {
 	/// <summary>
@@ -27,6 +28,7 @@ namespace ExpertMultimedia {
 		private int FrameLastDrawn=-1;
 		public static string tempsDir = System.IO.Path.GetTempPath();
 		private string myTempDir=null;
+		private string tempFramePath = null;
 		
 		public RImage riFrame=null;
 		public RImage riInterface=null;
@@ -42,6 +44,7 @@ namespace ExpertMultimedia {
 			if (!Directory.Exists(this.myTempDir)) {
 				Directory.CreateDirectory(this.myTempDir);
 			}
+			this.tempFramePath = Path.Combine(myTempDir, "tempframe.jpg");
 		}
 		#endregion constructors
 		
@@ -200,7 +203,7 @@ namespace ExpertMultimedia {
 				//psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
 				
 				System.Diagnostics.Process procFFMPEG=null;
-				callbackNow.WriteLine("Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+psi.Arguments);
+				callbackNow.WriteLine("SaveFrame Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+psi.Arguments);
 				procFFMPEG = System.Diagnostics.Process.Start(psi);
 				System.IO.StreamReader myOutput = procFFMPEG.StandardOutput;
 				procFFMPEG.WaitForExit();
@@ -213,7 +216,7 @@ namespace ExpertMultimedia {
 					//}
 				//}
 				if (DestFrameNow_FullName!=null&&DestFrameNow_FullName!=""&&File.Exists(DestFrameNow_FullName)
-				    &&(new FileInfo(DestFrameNow_FullName)).Length>0) {
+					&&(new FileInfo(DestFrameNow_FullName)).Length>0) {
 					bGood=true;
 				}
 			}
@@ -230,7 +233,6 @@ namespace ExpertMultimedia {
 			int iFPS=30;
 			bool bDropFrame=true;
 			string sTimeCode="";
-			//System.Diagnostics.ProcessStartInfo psi=null;
 			
 			// TODO: Test via image comparison of a whole MJPEG animation [output from sequential frame dump command].
 			//   THIS GETS ALL FRAMES USING ONE CALL TO FFMPEG:
@@ -243,10 +245,11 @@ namespace ExpertMultimedia {
 			//MY VERSION:
 			//ffmpeg "-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg \""+DestBase_FullName+"%05d.jpg\""
 			//%05d is for 5 digits
-		
 			
-			System.Diagnostics.Process procFFMPEG = new System.Diagnostics.Process();
-			procFFMPEG.StartInfo.FileName = sCommand_ffmpeg;//psi=new System.Diagnostics.ProcessStartInfo(sCommand_ffmpeg);
+			string inputFile = SourceFile_FullName;
+			string outputFile = tempFramePath;
+			// See <https://stackoverflow.com/a/50697975>:
+		
 			if (sCommand_ffmpeg.Contains(char.ToString(Path.DirectorySeparatorChar))) {
 				// It is a full path rather using the system path, so fail if not present.
 				if (!File.Exists(sCommand_ffmpeg)) {
@@ -254,34 +257,118 @@ namespace ExpertMultimedia {
 					return null;
 				}
 			}
+			System.Diagnostics.Process procFFMPEG = new System.Diagnostics.Process();
+			procFFMPEG.StartInfo.FileName = sCommand_ffmpeg;
+			// procFFMPEG.StartInfo.RedirectStandardInput = true;
 			procFFMPEG.StartInfo.UseShellExecute=false; 
-			procFFMPEG.StartInfo.RedirectStandardOutput=true;//psi.RedirectStandardOutput = true;
-			procFFMPEG.StartInfo.RedirectStandardError=true;//psi.RedirectStandardError = true;
-			procFFMPEG.StartInfo.WindowStyle=System.Diagnostics.ProcessWindowStyle.Hidden;// psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-			procFFMPEG.StartInfo.UseShellExecute=false;//psi.UseShellExecute = false;
+			procFFMPEG.StartInfo.RedirectStandardOutput=true;
+			procFFMPEG.StartInfo.RedirectStandardError=true;
+			procFFMPEG.StartInfo.CreateNoWindow=true;
+			// procFFMPEG.StartInfo.WindowStyle=System.Diagnostics.ProcessWindowStyle.Hidden;// psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+
+			procFFMPEG.EnableRaisingEvents = true;
 			//TODO:? -s 640x480 sets size
 			//TODO:? ask user for framerate?
 			//-r 30 forces 30fps
 			//-y overwrites destination
-			sTimeCode=RConvert.FrameToHMSDotMs(iFrame,iFPS,true);
-			procFFMPEG.StartInfo.Arguments="-ss "+sTimeCode+" -i \""+SourceFile_FullName+"\" -r "+dFPS.ToString("#.#")+" -vframes 1 -f mjpeg -";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
+			sTimeCode = RConvert.FrameToHMSDotMs(iFrame, iFPS, true);
+			procFFMPEG.StartInfo.Arguments="-i \""+SourceFile_FullName+"\" -ss "+sTimeCode+" -r "+dFPS.ToString("#.#")+" -nostdin -y -vframes 1 -f mjpeg -";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
 			//Environment.CurrentDirectory=sDestFolder;
 			//psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
 			//ImageConverter ic=new ImageConverter();
 			
+			procFFMPEG.ErrorDataReceived += (sender, eventArgs) =>
+			{
+				if (eventArgs.Data != null) {
+					// callbackNow.WriteLine(eventArgs.Data);
+					System.Diagnostics.Debug.WriteLine(eventArgs.Data);
+				}
+			};
 			
-			callbackNow.WriteLine("Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+procFFMPEG.StartInfo.Arguments);//+psi.Arguments);
-			procFFMPEG.Start(); //procFFMPEG = System.Diagnostics.Process.Start(psi);
-			callbackNow.WriteLine("waiting for ffmpeg...");
-			//This just waits FOREVER FOR AN UNKNOWN REASON (only problematic when '-' is used at end of command to redirect ffmpeg file output to standard output)
+			callbackNow.UpdateStatus("GetVideoFrameAsBitmap Running Command ("+iFrame.ToString()+"="+sTimeCode+") >"+sCommand_ffmpeg+" "+procFFMPEG.StartInfo.Arguments);//+psi.Arguments);
+			if (!procFFMPEG.Start()) {
+				callbackNow.UpdateStatus("Starting the process failed.");
+				return null;
+			}
+			procFFMPEG.BeginErrorReadLine(); // See ErrorDataReceived handler
+			bool embeddedColorMgMt = true;
+			bool validateImageData = true;
+			/*
+			var inputTask = Task.Run(() =>
+			{
+				using (var input = new FileStream(inputFile, FileMode.Open))
+				{
+					input.CopyTo(procFFMPEG.StandardInput.BaseStream);
+					procFFMPEG.StandardInput.Close();
+				}
+			});
+			
+			*/
+			// procFFMPEG.StandardInput.Close();
+			
+			var outputTask = Task.Run(() =>
+			{
+				using (var output = new FileStream(outputFile, FileMode.Create))
+				{
+					// procFFMPEG.StandardOutput.BaseStream.CopyTo(output);
+					bmpReturn = (Bitmap)Bitmap.FromStream(procFFMPEG.StandardOutput.BaseStream, embeddedColorMgMt, validateImageData);
+				}
+			});
+		   
+			Task.WaitAll(
+		   		// inputTask,
+		   		outputTask
+		   	);
+		   	callbackNow.WriteLine("waiting for ffmpeg...");
 			procFFMPEG.WaitForExit();
+			
+			
+			
+			
 			callbackNow.WriteLine("getting bitmap stream...");
-			StreamReader streamIn = procFFMPEG.StandardOutput;
-			//BinaryReader br=new BinaryReader(streamIn);
-			//MemoryStream memsIn=new MemoryStream(byarrData);
-			//Image img=Image.FromStream(streamIn);
+			// StreamReader streamIn = procFFMPEG.StandardOutput;
+			// BinaryReader br=new BinaryReader(streamIn);
+			// MemoryStream memsIn=new MemoryStream(byarrData);
+			// Image img=Image.FromStream(streamIn);
 			callbackNow.WriteLine("getting bitmap...");
-			bmpReturn=(Bitmap)Bitmap.FromStream(streamIn.BaseStream);
+			
+			/*
+			if (procFFMPEG.StandardOutput.BaseStream.Length == 0) {
+				callbackNow.WriteLine("Error: The output length is 0");
+				return null;
+			}
+			else if (procFFMPEG.StandardOutput.BaseStream.Position == procFFMPEG.StandardOutput.BaseStream.Length) {
+				callbackNow.WriteLine("The output was fully read to a stream.");
+				return null;
+			}
+			elif (procFFMPEG.StandardOutput.BaseStream.Position != 0) {
+				callbackNow.WriteLine("The output was partially read to a stream.");
+				return null;
+			}
+			*/
+			// ^ "System.NotSupportedException: Stream does not support seeking."
+			try {
+				/*
+				using (StreamWriter sw = new System.IO.StreamWriter(outputFile))
+				{
+					sw.Write(streamIn.ReadToEnd());
+					callbackNow.WriteLine("wrote \""+outputFile+"\"");
+				}
+				*/
+
+				// Console.Write(streamIn.BaseStream);
+				// Console.Out.Flush();
+				// bmpReturn = (Bitmap)Bitmap.FromStream(procFFMPEG.StandardOutput.BaseStream, embeddedColorMgMt, validateImageData);
+				// procFFMPEG.WaitForExit();
+				// procFFMPEG.StandardOutput.Close();
+				
+			}
+			catch (System.ArgumentException ex) {
+				callbackNow.WriteLine("The image data from ffmpeg was invalid. See the console output.");
+				// Console.Write(streamIn.BaseStream);
+				// Console.Out.Flush();
+				return null;
+			}
 			
 			
 			//bmpReturn=new Bitmap(
@@ -304,7 +391,7 @@ namespace ExpertMultimedia {
 				//}
 			//}
 			//if (DestFrameNow_FullName!=null&&DestFrameNow_FullName!=""&&File.Exists(DestFrameNow_FullName)
-			//    &&(new FileInfo(DestFrameNow_FullName)).Length>0) {
+			//	&&(new FileInfo(DestFrameNow_FullName)).Length>0) {
 			//	bGood=true;
 			//}
 			/*
@@ -339,15 +426,15 @@ namespace ExpertMultimedia {
 				callbackNow.UpdateStatus("Loading frame using image format GUID...OK");
 			}
 			else { //else NOT an image, so try ffmpeg
-				if (File.Exists(myTempDir+"tempframe.jpg")) File.Delete(myTempDir+"tempframe.jpg");
+				if (File.Exists(tempFramePath)) File.Delete(tempFramePath);
 				
 				//Next 2 lines check whether frame exists!  //TODO: make it into a separate method
-				// this.SaveFrame(myTempDir+"tempframe.jpg", OpenedFile_FullBaseName+"."+OpenedFile_Ext, iFrameX);
-				bGood = true; // bGood=File.Exists(myTempDir+"tempframe.jpg") && ((new FileInfo(myTempDir+"tempframe.jpg")).Length>0);
-
-				callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
+				// this.SaveFrame(tempFramePath, OpenedFile_FullBaseName+"."+OpenedFile_Ext, iFrameX);
+				// bGood=File.Exists(tempFramePath) && ((new FileInfo(tempFramePath)).Length>0);
+				// callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
+				bGood = true; 
 				if (bGood) {
-					callbackNow.UpdateStatus("Frame "+iFrame.ToString()+"...");
+					callbackNow.UpdateStatus("GotoFrame "+iFrame.ToString()+" (FFMPEG)...");
 					string framePrefix = OpenedFile_FullBaseName+"."+OpenedFile_Ext;
 					bmpFFMPEG = GetVideoFrameAsBitmap(framePrefix, iFrameX, callbackNow);
 					if (bmpFFMPEG == null) {
@@ -355,20 +442,19 @@ namespace ExpertMultimedia {
 						// callbackNow.UpdateStatus("Error: \"" + framePrefix + "\" frame " + iFrameX + " couldn't be loaded.");
 						return false;
 					}
+					callbackNow.UpdateStatus("GotoFrame...done load image from frame "+iFrame.ToString());
 					// bmpFFMPEG=new Bitmap(streamIn);
-					riFrame.Load(bmpFFMPEG,4);
+					RReporting.iDebugLevel = RReporting.DebugLevel_Max;
+					RReporting.sParticiple = "calling riFrame.Load";
+					if (riFrame == null) riFrame = new RImage(sFileNow,4);
+					bGood = riFrame.Load(bmpFFMPEG, 4);
 					try {
 						bmpFFMPEG.Dispose();
-						bmpFFMPEG=null;
-					}
-					catch {}
-					try {
-						bmpFFMPEG.Dispose();
-						bmpFFMPEG=null;
+						bmpFFMPEG = null;
 					}
 					catch {}
 					
-					//riFrame.Load(myTempDir+"tempframe.jpg",4);
+					//riFrame.Load(tempFramePath, 4);
 					/*
 					if (riFrame.Width>0&&riFrame.Height>0) {
 						if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
@@ -409,7 +495,7 @@ namespace ExpertMultimedia {
 				callbackNow.UpdateStatus("Reloading frame "+iFrame+" (was "+FrameLastDrawn.ToString()+")");
 				ReloadFrameBitmap(callbackNow);
 			}
-			callbackNow.UpdateStatus("Frame "+iFrame.ToString());
+			callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
 		}
 	}//end RotoCanvas
 }//end RotoCanvas

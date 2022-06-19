@@ -34,6 +34,7 @@ namespace ExpertMultimedia
 		string videos = null;
 		string devVideoPath = null;
 		public RotoCanvas rotocanvasNow=null;
+		static System.Timers.Timer testTimer = null;
 		
 		public MainForm()
 		{
@@ -55,14 +56,38 @@ namespace ExpertMultimedia
 			callbackNow.sbX=this.tbStatus;
 		}
 		
+		void DebugWriteLine(string msg) {
+			System.Diagnostics.Debug.WriteLine(msg);
+		}
+		
 		void ShowExn(Exception exn, string sParticiple, string sNoun) {
 			callbackNow.WriteLine("Couldn't finish "+((sParticiple==null)?"":sParticiple)+" in "+((sNoun==null)?"":sNoun)+": "+exn.ToString());
 		}
 		
 		void MainFormLoad(object sender, EventArgs e) {
 			string sFileTheoretical=@"D:\Videos\Projects\Rebel Assault IX\RAIX2b\Scene04 (Speeder Bikes)\shot1 (from left)\2b3_3 manual deshake\RAIX2b-scene-speederbikes-shot1-0001.png";
-			if (File.Exists(sFileTheoretical)) tbInput.Text=sFileTheoretical;
-			else if (File.Exists(devVideoPath)) this.OpenVideo(devVideoPath);
+			tbInput.Text = "";
+			if (File.Exists(sFileTheoretical)) tbInput.Text = sFileTheoretical;
+			else if (File.Exists(devVideoPath)) tbInput.Text = devVideoPath;
+			
+			if (tbInput.Text != "") {
+				DebugWriteLine("found test file \""+tbInput.Text+"\"");
+				Application.DoEvents();
+				// this.OpenVideoFromInput();
+				testTimer = new System.Timers.Timer();
+				testTimer.Interval = 50;
+				testTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.testTimer_Tick);
+				//TODO: testTimer.Start();
+			}
+			else {
+				DebugWriteLine("There is no test file.");
+			}
+		}
+		
+		private void testTimer_Tick(object sender, EventArgs e)
+		{
+			testTimer.Stop();
+			this.OpenVideoFromInput();
 		}
 
 		void BtnBrowseClick(object sender, EventArgs e)
@@ -131,6 +156,7 @@ namespace ExpertMultimedia
 				return;
 			}
 			this.OpenVideo(ofd.FileName);
+			panel1.Invalidate();
 		}
 		
 		void OpenImageSequenceToolStripMenuItemClick(object sender, EventArgs e)
@@ -173,7 +199,8 @@ namespace ExpertMultimedia
 			//	riFrame.DrawAs(bmpBack,bmpBack.PixelFormat);
 			//}
 			if (rotocanvasNow.riFrame!=null) {
-				//callbackNow.WriteLine("Panel1Paint {riFrame.iFrame:"+rotocanvasNow.get_CurrentIndex()+"}");
+				System.Drawing.Size size = new Size(rotocanvasNow.riFrame.Width, rotocanvasNow.riFrame.Height);
+				System.Diagnostics.Debug.WriteLine("Panel1Paint {riFrame.iFrame:"+rotocanvasNow.get_CurrentIndex()+"; size: "+size.ToString()+"}");
 				if (panel1.Width!=rotocanvasNow.riFrame.Width) panel1.Width=rotocanvasNow.riFrame.Width;
 				if (panel1.Height!=rotocanvasNow.riFrame.Height) panel1.Height=rotocanvasNow.riFrame.Height;
 				rotocanvasNow.DrawFrame(callbackNow);
@@ -184,9 +211,13 @@ namespace ExpertMultimedia
 //				}
 				e.Graphics.DrawImageUnscaled(rotocanvasNow.bmpBack,pTopLeft);
 			}
+			else {
+				System.Diagnostics.Debug.WriteLine("Panel1Paint {riFrame:null}");
+			}
 		}
 		
 		void OpenVideo(string path) {
+			DebugWriteLine("OpenVideo \""+path+"\"...");
 			tbInput.Text = path;
 			rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
 			this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
@@ -195,8 +226,14 @@ namespace ExpertMultimedia
 			if (frame < 0) {
 				frame = 0;
 			}
-			this.trackbarFrame.Value=frame;			
+			this.trackbarFrame.Value = frame;
+			DebugWriteLine("GotoFrame \""+frame.ToString()+"\"...");
+			rotocanvasNow.GotoFrame(frame, 0, callbackNow);
+			this.panel1.Invalidate();
 		}
 		
+		void OpenVideoFromInput() {
+			this.OpenVideo(tbInput.Text);
+		}
 	}//end MainForm
 }//end namespace
