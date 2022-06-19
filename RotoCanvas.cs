@@ -478,12 +478,14 @@ namespace ExpertMultimedia {
 		}//end GotoFrame
 		
 		public void ReloadFrameBitmap(RCallback callbackNow) {
+			System.Diagnostics.Debug.WriteLine("  - ReloadFrameBitmap");
 			riFrame.DrawAs(bmpBack,bmpBack.PixelFormat);  //, callbackNow);
 			callbackNow.WriteLine("ReloadFrameBitmap {iFrame:"+iFrame.ToString()+"}");
 			FrameLastDrawn=iFrame;
 		}
 		
 		public void DrawFrame(RCallback callbackNow) {
+			System.Diagnostics.Debug.WriteLine("- DrawFrame");
 			if (riFrame.Width>0&&riFrame.Height>0) {
 				if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
 					bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -495,7 +497,9 @@ namespace ExpertMultimedia {
 				callbackNow.UpdateStatus("Reloading frame "+iFrame+" (was "+FrameLastDrawn.ToString()+")");
 				ReloadFrameBitmap(callbackNow);
 			}
-			callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
+			// callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
+			callbackNow.WriteLine("Frame "+iFrame.ToString()+" drawn", false);
+			// ^ Do NOT refresh, or Invalidate will get called again, causing a loop!
 		}
 	}//end RotoCanvas
 }//end RotoCanvas
