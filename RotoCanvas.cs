@@ -8,6 +8,7 @@
  */
 using System;
 using System.IO;
+using System.Diagnostics;  // Debug
 using System.Drawing;
 using System.Threading.Tasks;
 
@@ -34,7 +35,8 @@ namespace ExpertMultimedia {
 		public RImage riInterface=null;
 		public bool bCancel=false;
 		public Bitmap bmpBack=new Bitmap(640,480,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-		public static string sCommand_ffmpeg = @"C:\PortableApps\winbuilds\bin\ffmpeg.exe"; // @"E:\progs\video\gui4ffmpeg\ffmpeg.exe";
+		public static string sCommand_ffmpeg = null;
+		public string error = null;
 		#endregion variables
 		
 		
@@ -45,6 +47,10 @@ namespace ExpertMultimedia {
 				Directory.CreateDirectory(this.myTempDir);
 			}
 			this.tempFramePath = Path.Combine(myTempDir, "tempframe.jpg");
+			sCommand_ffmpeg = RPlatform.Which("ffmpeg");
+			if (sCommand_ffmpeg == null) {
+				error = String.Format("Could not find FFMPEG in {0}", RPlatform.Paths);
+			}
 		}
 		#endregion constructors
 		
@@ -276,6 +282,7 @@ namespace ExpertMultimedia {
 			//Environment.CurrentDirectory=sDestFolder;
 			//psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
 			//ImageConverter ic=new ImageConverter();
+			Debug.WriteLine(String.Format("COMMAND: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments));
 			
 			procFFMPEG.ErrorDataReceived += (sender, eventArgs) =>
 			{
@@ -312,6 +319,7 @@ namespace ExpertMultimedia {
 				{
 					// procFFMPEG.StandardOutput.BaseStream.CopyTo(output);
 					bmpReturn = (Bitmap)Bitmap.FromStream(procFFMPEG.StandardOutput.BaseStream, embeddedColorMgMt, validateImageData);
+					// FIXME: ^ sometimes throws invalid argument exception
 				}
 			});
 		   
@@ -321,9 +329,6 @@ namespace ExpertMultimedia {
 		   	);
 		   	callbackNow.WriteLine("waiting for ffmpeg...");
 			procFFMPEG.WaitForExit();
-			
-			
-			
 			
 			callbackNow.WriteLine("getting bitmap stream...");
 			// StreamReader streamIn = procFFMPEG.StandardOutput;

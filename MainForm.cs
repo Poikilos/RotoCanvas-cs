@@ -54,6 +54,10 @@ namespace ExpertMultimedia
 			callbackNow.formX=this;
 			callbackNow.lbX=this.lbOut;
 			callbackNow.sbX=this.tbStatus;
+			if (rotocanvasNow.error != null) {
+				rotocanvasNow.error = null;
+				this.tbStatus.Text = String.Format("RotoCanvas couldn't start: {0}", rotocanvasNow.error);
+			}
 		}
 		
 		void DebugWriteLine(string msg) {
