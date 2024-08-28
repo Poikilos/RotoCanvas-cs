@@ -30,14 +30,19 @@ namespace ExpertMultimedia
 		//Bitmap bmpFFMPEG=null;
 		RCallback callbackNow=null;
 		//public bool bClosing=false;
-		string profile = Environment.GetEnvironmentVariable("USERPROFILE");
+		string profile = null;
 		string videos = null;
 		string devVideoPath = null;
 		public RotoCanvas rotocanvasNow=null;
 		static System.Timers.Timer testTimer = null;
+		System.Timers.Timer startTimer = null;
+		bool _started = false;
 		
 		public MainForm()
 		{
+			// profile = Environment.GetEnvironmentVariable("USERPROFILE");
+			profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
 			//
 			//
 			// The InitializeComponent() call is required for Windows Forms designer support.
@@ -53,7 +58,8 @@ namespace ExpertMultimedia
 			
 			callbackNow.formX=this;
 			callbackNow.lbX=this.lbOut;
-			callbackNow.sbX=this.tbStatus;
+			// callbackNow.sbX=this.tbStatus;
+			callbackNow.tsslX=this.tbStatus;
 			if (rotocanvasNow.error != null) {
 				rotocanvasNow.error = null;
 				this.tbStatus.Text = String.Format("RotoCanvas couldn't start: {0}", rotocanvasNow.error);
@@ -82,6 +88,9 @@ namespace ExpertMultimedia
 				testTimer.Interval = 50;
 				testTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.testTimer_Tick);
 				//TODO: testTimer.Start();
+				this.startTimer = new System.Timers.Timer();
+				startTimer.Interval = 1;
+				startTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.startTimer_Tick);
 			}
 			else {
 				DebugWriteLine("There is no test file.");
@@ -93,7 +102,13 @@ namespace ExpertMultimedia
 			testTimer.Stop();
 			this.OpenVideoFromInput();
 		}
-
+		private void startTimer_Tick(object sender, EventArgs e)
+		{
+			startTimer.Stop();
+			if (_started) return;
+			_started = true;
+			UpdateSize();
+		}
 		void BtnBrowseClick(object sender, EventArgs e)
 		{
 			this.ofiledlg.FileName="";
@@ -104,14 +119,16 @@ namespace ExpertMultimedia
 		{
 			this.tbInput.Text=ofiledlg.FileName;//TODO: use FileNames string[]
 		}
-		
 
-		
 		void MainFormResize(object sender, EventArgs e)
 		{
-			//UpdateSize();
+			UpdateSize();
 		}
-		
+
+		void UpdateSize() {
+			progressbarMain.Width = this.ClientSize.Width - tbStatus.Width - scrubStatus.Width;
+		}
+
 		void MainFormFormClosing(object sender, FormClosingEventArgs e)
 		{
 			rotocanvasNow.bCancel=true;//bClosing=true;
@@ -130,9 +147,14 @@ namespace ExpertMultimedia
 			//}
 			//else tbStatus.Text="No frames exist.";
 			rotocanvasNow.GotoFrame(this.trackbarFrame.Value,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
+			ShowScrubStatus();  // show actual frame rotocanvas could obtain, rather than the tried one
 			panel1.Invalidate();
 		}
 		
+		void ShowScrubStatus() {
+			string frame = String.Format("{0}/{1}", rotocanvasNow.FrameNumber, rotocanvasNow.FrameCount);
+		}
+
 		void NudMinDigitsValueChanged(object sender, EventArgs e)
 		{
 			string sText="Image Sequence Digits *";
@@ -142,7 +164,7 @@ namespace ExpertMultimedia
 			sText+=".*";
 			lblMinDigits.Text=sText;
 		}
-		
+
 		void OpenVideoToolStripMenuItemClick(object sender, EventArgs e)
 		{
 			cancelToolStripMenuItem.Enabled=true;
@@ -238,6 +260,10 @@ namespace ExpertMultimedia
 		
 		void OpenVideoFromInput() {
 			this.OpenVideo(tbInput.Text);
+		}
+		void Panel1Click(object sender, EventArgs e)
+		{
+
 		}
 	}//end MainForm
 }//end namespace

@@ -113,17 +113,24 @@
       <Link>Var.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="FrameworkFastPanel.cs" />
+    <Compile Include="FfmpegSession.cs" />
+    <Compile Include="FrameworkFastPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FrameworkFastPanel.Designer.cs">
       <DependentUpon>FrameworkFastPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainForm.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="RCallback.cs" />
     <Compile Include="RotoCanvas.cs" />
+    <Compile Include="StreamInfo.cs" />
+    <Compile Include="VideoInfo.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
