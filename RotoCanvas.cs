@@ -24,7 +24,7 @@ namespace ExpertMultimedia {
         private string OpenedFile_FullBaseName="";
         private int OpenedFile_MinDigits=0;
         private int iFirstIndex=0;
-        private int iLastIndex=1;
+        private int iLastIndex=0;
         private Bitmap bmpFFMPEG=null;
         private int iFrame=-2;
         private int FrameLastDrawn=-1;
@@ -87,12 +87,13 @@ namespace ExpertMultimedia {
                 //if (OpenedFile_FullBaseName.Contains("RebelAssaultIX0a(raw,1996version,fixed-beginning-version)")) this.trackbarFrame.Maximum=7307;//TODO: detect this
                 //else {
                 iLastIndex = this.videoinfo.FrameCount() - 1;  // a.k.a. .Maximum, frameCount
+                Debug.WriteLine(String.Format("iLastIndex={0}", iLastIndex));
                 //}
                 if (iLastIndex < 1) {
                     iLastIndex = 1;  // TODO: instead, hide animation interface if < 1
                 }
-                iFrame = 0;
-                GotoFrame(iFrame,iMinDigits,callbackNow);
+                iFrame = -1; // set by GotoFrame if successful
+                GotoFrame(0,iMinDigits,callbackNow);
             }
             else {
                 OpenedFile_FullBaseName="";
@@ -445,7 +446,7 @@ namespace ExpertMultimedia {
                 // callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
                 bGood = true;
                 if (bGood) {
-                    callbackNow.UpdateStatus("GotoFrame "+iFrame.ToString()+" (FFMPEG)...");
+                    callbackNow.UpdateStatus("GotoFrame "+iFrameX.ToString()+" (FFMPEG)...");
                     string framePrefix = OpenedFile_FullBaseName+"."+OpenedFile_Ext;
                     bmpFFMPEG = GetVideoFrameAsBitmap(framePrefix, iFrameX, callbackNow);
                     if (bmpFFMPEG == null) {
@@ -453,7 +454,7 @@ namespace ExpertMultimedia {
                         // callbackNow.UpdateStatus("Error: \"" + framePrefix + "\" frame " + iFrameX + " couldn't be loaded.");
                         return false;
                     }
-                    callbackNow.UpdateStatus("GotoFrame...done load image from frame "+iFrame.ToString());
+                    callbackNow.UpdateStatus("GotoFrame...done load image from frame "+iFrameX.ToString());
                     // bmpFFMPEG=new Bitmap(streamIn);
                     RReporting.iDebugLevel = RReporting.DebugLevel_Max;
                     RReporting.sParticiple = "calling riFrame.Load";
@@ -475,7 +476,7 @@ namespace ExpertMultimedia {
                     else callbackNow.UpdateStatus("Could not process frame format {Width:"+riFrame.Width+";"+"Height:"+riFrame.Height+"}");
                     */
                 }
-                //else this.tbStatus.Text="Could not find frame "+iFrame.ToString();
+                //else this.tbStatus.Text="Could not find frame "+iFrameX.ToString();
                 callbackNow.UpdateStatus("Loading frame using FFMPEG..."+(bGood?"OK":"FAILED"));
             }
 
@@ -485,6 +486,10 @@ namespace ExpertMultimedia {
                 //ShowExn(exn, "drawing frame", "RotoCanvas DrawFrame");
             }
             */
+            if (bGood)
+            {
+                this.iFrame = iFrameX;
+            }
             return bGood;
         }//end GotoFrame
 
@@ -509,7 +514,7 @@ namespace ExpertMultimedia {
                 ReloadFrameBitmap(callbackNow);
             }
             // callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
-            callbackNow.WriteLine("Frame "+iFrame.ToString()+" drawn", false);
+            callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
             // ^ Do NOT refresh, or Invalidate will get called again, causing a loop!
         }
     }//end RotoCanvas

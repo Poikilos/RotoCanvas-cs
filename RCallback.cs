@@ -140,7 +140,7 @@ namespace ExpertMultimedia {
                         //if (formX!=null) {
                         //    formX.Refresh();
                         //}
-                        Application.DoEvents();
+                        // TODO: ? seemed hung here Application.DoEvents();
                     }
                 }
             }

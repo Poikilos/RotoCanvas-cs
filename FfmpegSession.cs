@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.Collections.Generic;  // List
 using System.Diagnostics; // Process, ProcessStartInfo
 using System.Text.RegularExpressions;  // Regex, RegexOptions
 
@@ -52,99 +53,127 @@ namespace ExpertMultimedia
                 string output = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
-                // Regex patterns
-                var durationRegex = new Regex(@"Duration:\s*(\d+):(\d+):(\d+)\.(\d+)", RegexOptions.IgnoreCase);
-                var streamRegex = new Regex(@"Stream #(\d+):(\d+).*:.*", RegexOptions.IgnoreCase);
-                var metadataRegex = new Regex(@"Metadata:\s*(.*)", RegexOptions.IgnoreCase);
-
-                // Extract duration
-                var durationMatch = durationRegex.Match(output);
-                if (durationMatch.Success)
-                {
-                    int hours = int.Parse(durationMatch.Groups[1].Value);
-                    int minutes = int.Parse(durationMatch.Groups[2].Value);
-                    int seconds = int.Parse(durationMatch.Groups[3].Value);
-                    int milliseconds = int.Parse(durationMatch.Groups[4].Value);
-
-                    videoInfo.Hours = hours;
-                    videoInfo.Minutes = minutes;
-                    videoInfo.Seconds = seconds;
-                    videoInfo.Milliseconds = milliseconds;
-                    videoInfo.TotalSeconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 100.0;
-                }
-
-                // Process stream info
-                MatchCollection streamMatches = streamRegex.Matches(output);
+                // Split output into lines
                 var lines = output.Split('\n');
+                bool isInStream = false;
+                bool isInMetadata = false;
+                StreamInfo currentStreamInfo = null;
 
-                foreach (Match match in streamMatches)
+                foreach (string line in lines)
                 {
-                    StreamInfo streamInfo = new StreamInfo();
-                    int index = int.Parse(match.Groups[1].Value);
-                    int subIndex = int.Parse(match.Groups[2].Value);
-                    streamInfo.Index = index;
-                    streamInfo.SubIndex = subIndex;
+                    string trimmedLine = line.Trim();
 
-                    // Extract stream details
-                    int streamStartLine = output.IndexOf(match.Value);
-                    string streamLine = lines[streamStartLine];
-                    var streamDetails = streamLine.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (string.IsNullOrEmpty(trimmedLine))
+                        continue;
 
-                    foreach (var detail in streamDetails)
+                    // Check for duration
+                    var durationMatch = Regex.Match(trimmedLine, @"Duration:\s*(\d+):(\d+):(\d+)\.(\d+)", RegexOptions.IgnoreCase);
+                    if (durationMatch.Success)
                     {
-                        var trimmedDetail = detail.Trim();
-                        streamInfo.StreamFlags.Add(trimmedDetail);
+                        int hours = int.Parse(durationMatch.Groups[1].Value);
+                        int minutes = int.Parse(durationMatch.Groups[2].Value);
+                        int seconds = int.Parse(durationMatch.Groups[3].Value);
+                        int milliseconds = int.Parse(durationMatch.Groups[4].Value);
 
-                        if (trimmedDetail.Contains("fps")) {
-                            streamInfo.Fps = trimmedDetail.Split(' ')[0];
-                        }
-                        if (trimmedDetail.Contains("tbr"))
-                            streamInfo.Tbr = trimmedDetail.Split(' ')[0];
-                        if (trimmedDetail.Contains("tbn"))
-                            streamInfo.Tbn = trimmedDetail.Split(' ')[0];
-                        if (trimmedDetail.Contains("tbc"))
-                            streamInfo.Tbc = trimmedDetail.Split(' ')[0];
+                        videoInfo.Hours = hours;
+                        Debug.WriteLine(String.Format("Hours={0}", hours));
+                        videoInfo.Minutes = minutes;
+                        Debug.WriteLine(String.Format("Minutes={0}", minutes));
+                        videoInfo.Seconds = seconds;
+                        Debug.WriteLine(String.Format("Seconds={0}", seconds));
+                        videoInfo.Milliseconds = milliseconds;
+                        Debug.WriteLine(String.Format("Milliseconds={0}", milliseconds));
+                        videoInfo.TotalSeconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 100.0;
+                        Debug.WriteLine(String.Format("TotalSeconds={0}", videoInfo.TotalSeconds));
+                        continue;
                     }
 
-                    if (streamInfo.StreamFlags.Count > 0)
+                    // Check for stream info
+                    var streamMatch = Regex.Match(trimmedLine, @"Stream #(\d+):(\d+)", RegexOptions.IgnoreCase);
+                    if (streamMatch.Success)
                     {
-                        var codec = streamInfo.StreamFlags[0];
-                        streamInfo.Codec = codec;
-                        if (streamInfo.StreamFlags.Count > 1)
-                            streamInfo.Resolution = streamInfo.StreamFlags[1];
+                        isInStream = true;
+                        isInMetadata = false;
 
-                        if (streamInfo.StreamFlags.Count > 2)
+                        // Create a new StreamInfo object
+                        currentStreamInfo = new StreamInfo
                         {
-                            var sarDar = streamInfo.StreamFlags[2];
-                            var sarDarParts = sarDar.Split(new[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (sarDarParts.Length >= 4)
-                            {
-                                streamInfo.SAR.Add(int.Parse(sarDarParts[0]));
-                                streamInfo.SAR.Add(int.Parse(sarDarParts[1]));
-                                streamInfo.DAR.Add(int.Parse(sarDarParts[2]));
-                                streamInfo.DAR.Add(int.Parse(sarDarParts[3]));
-                            }
-                        }
+                            Index = int.Parse(streamMatch.Groups[1].Value),
+                            SubIndex = int.Parse(streamMatch.Groups[2].Value),
+                            StreamFlags = new List<string>(),
+                            StreamMeta = new Dictionary<string, string>()
+                        };
 
-                        if (streamInfo.StreamFlags.Count > 3)
-                            streamInfo.DataRate = streamInfo.StreamFlags[3];
+                        videoInfo.Streams.Add(currentStreamInfo);
+
+                        var streamDetails = trimmedLine.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        for (int i = 0; i < streamDetails.Length; i++)
+                        {
+                            string detail = streamDetails[i].Trim();
+                            // Add details to StreamFlags
+                            currentStreamInfo.StreamFlags.Add(detail);
+                            var resolutionMatch = Regex.Match(detail, @"(\d+)x(\d+)(?:\s*\[SAR\s(\d+):(\d+)\sDAR\s(\d+):(\d+)\])?", RegexOptions.IgnoreCase);
+                            if (detail.Contains("Video"))
+                                currentStreamInfo.StreamType = "Video";
+                                // such as "Stream #0:0[0x1](und): Video: h264 (Main) (avc1 / 0x31637661)"
+                            else if (detail.Contains("Audio"))
+                                currentStreamInfo.StreamType = "Audio";
+                            // such as "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D)"
+                            else if (resolutionMatch.Success)
+                            {
+                                currentStreamInfo.Resolution = String.Format("{0}x{1}", resolutionMatch.Groups[1].Value, resolutionMatch.Groups[2].Value);
+                                currentStreamInfo.Width = int.Parse(resolutionMatch.Groups[1].Value);
+                                currentStreamInfo.Height = int.Parse(resolutionMatch.Groups[2].Value);
+                                // Extract SAR
+                                if (resolutionMatch.Groups[3].Success && resolutionMatch.Groups[4].Success)
+                                {
+                                    currentStreamInfo.SAR = new List<int>();
+                                    currentStreamInfo.SAR.Add(int.Parse(resolutionMatch.Groups[3].Value));
+                                    currentStreamInfo.SAR.Add(int.Parse(resolutionMatch.Groups[4].Value));
+                                }
+
+                                // Extract DAR
+                                if (resolutionMatch.Groups[5].Success && resolutionMatch.Groups[6].Success)
+                                {
+                                    currentStreamInfo.SAR = new List<int>();
+                                    currentStreamInfo.DAR.Add(int.Parse(resolutionMatch.Groups[5].Value));
+                                    currentStreamInfo.DAR.Add(int.Parse(resolutionMatch.Groups[6].Value));
+                                }
+                            }
+                            // Extract codec, resolution, SAR, DAR, data rate, fps, tbr, tbn, tbc
+                            else if (detail.Contains("fps"))
+                                currentStreamInfo.Fps = detail.Split(' ')[0];
+                            else if (detail.Contains("tbr"))
+                                currentStreamInfo.Tbr = detail.Split(' ')[0];
+                            else if (detail.Contains("tbn"))
+                                currentStreamInfo.Tbn = detail.Split(' ')[0];
+                            else if (detail.Contains("tbc"))
+                                currentStreamInfo.Tbc = detail.Split(' ')[0];
+                            else if (detail.Contains("kb/s") || detail.Contains("kbit/s"))
+                                currentStreamInfo.DataRate = detail;
+                        }
+                        continue;
                     }
 
-                    // Extract metadata if available
-                    int metadataStartLine = output.IndexOf("Metadata:");
-                    if (metadataStartLine > 0)
+                    // Check for metadata info
+                    if (trimmedLine.StartsWith("Metadata:"))
                     {
-                        string metadataLine = lines[metadataStartLine + 1];
-                        var metadataParts = metadataLine.Split(new[] { ':' }, 2);
+                        isInMetadata = true;
+                        isInStream = false;
+                        continue;
+                    }
+
+                    if (isInMetadata && currentStreamInfo != null)
+                    {
+                        // Process metadata
+                        var metadataParts = trimmedLine.Split(new[] { ':' }, 2);
                         if (metadataParts.Length == 2)
                         {
                             var key = metadataParts[0].Trim();
                             var value = metadataParts[1].Trim();
-                            streamInfo.StreamMeta[key] = value;
+                            currentStreamInfo.StreamMeta[key] = value;
                         }
                     }
-
-                    videoInfo.Streams.Add(streamInfo);
                 }
             }
             catch (Exception ex)
@@ -153,6 +182,21 @@ namespace ExpertMultimedia
             }
 
             return videoInfo;
+        }
+
+        private static List<int> ExtractNumbers(string detail, string prefix)
+        {
+            var numbers = new List<int>();
+            var match = Regex.Match(detail, $@"{prefix}\s(\d+):(\d+)");
+            if (match.Success)
+            {
+                int num1, num2;
+                if (int.TryParse(match.Groups[1].Value, out num1))
+                    numbers.Add(num1);
+                if (int.TryParse(match.Groups[2].Value, out num2))
+                    numbers.Add(num2);
+            }
+            return numbers;
         }
     }
 }

@@ -146,12 +146,12 @@ namespace ExpertMultimedia
             //    DrawFrame(this.trackbarFrame.Value);
             //}
             //else tbStatus.Text="No frames exist.";
-            rotocanvasNow.GotoFrame(this.trackbarFrame.Value,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
-            ShowScrubStatus();  // show actual frame rotocanvas could obtain, rather than the tried one
+            this.GotoFrame(this.trackbarFrame.Value);
             panel1.Invalidate();
         }
 
-        void ShowScrubStatus() {
+        void ShowScrubStatus() {  // a.k.a. ShowFrame, UpdateFrame
+            // FIXME: remove useless calls after calling functions that start threads (This is called from tbStatus_TextChanged now)
             string frame = String.Format("{0}/{1}", rotocanvasNow.FrameNumber, rotocanvasNow.FrameCount);
         }
 
@@ -247,15 +247,28 @@ namespace ExpertMultimedia
             tbInput.Text = path;
             rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
             this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
+            Debug.WriteLine(String.Format("rotocanvasNow.get_FirstIndex(): {0}", rotocanvasNow.get_FirstIndex()));
             this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
+            Debug.WriteLine(String.Format("rotocanvasNow.get_LastIndex(): {0}", rotocanvasNow.get_LastIndex()));
             int frame = rotocanvasNow.get_CurrentIndex();
             if (frame < 0) {
                 frame = 0;
             }
             this.trackbarFrame.Value = frame;
             DebugWriteLine("GotoFrame \""+frame.ToString()+"\"...");
-            rotocanvasNow.GotoFrame(frame, 0, callbackNow);
+            this.GotoFrame(frame);
             this.panel1.Invalidate();
+        }
+
+        bool GotoFrame(int frame)
+        {
+            if (!rotocanvasNow.GotoFrame(frame, RConvert.ToInt(this.nudMinDigits.Value), callbackNow))
+            {
+                return false;
+            }
+            ShowScrubStatus();  // show actual frame rotocanvas could obtain, rather than the tried one
+            // scrubStatus.Text = String.Format("{0}/{1}", rotocanvasNow.FrameNumber, rotocanvasNow.FrameCount);
+            return true;
         }
 
         void OpenVideoFromInput() {
@@ -264,6 +277,16 @@ namespace ExpertMultimedia
         void Panel1Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void tbStatus_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tbStatus_TextChanged(object sender, EventArgs e)
+        {
+            ShowScrubStatus();
         }
     }//end MainForm
 }//end namespace

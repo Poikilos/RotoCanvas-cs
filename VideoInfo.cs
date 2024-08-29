@@ -8,6 +8,7 @@
  */
 using System;
 using System.Collections.Generic;  // List
+using System.Diagnostics;  // Debug
 
 namespace ExpertMultimedia
 {
@@ -16,12 +17,12 @@ namespace ExpertMultimedia
     /// </summary>
     public class VideoInfo
     {
-        public int Hours { get; set; }
-        public int Minutes { get; set; }
-        public int Seconds { get; set; }
-        public int Milliseconds { get; set; }
-        public double TotalSeconds { get; set; }
-        public string Fps { get; set; }
+        public int Hours = 0;
+        public int Minutes = 0;
+        public int Seconds = 0;
+        public int Milliseconds = 0;
+        public double TotalSeconds = 0;
+        public string Fps = null;
         public List<StreamInfo> Streams = new List<StreamInfo>();
         public int SelectedStreamIndex = -1;
 
@@ -61,8 +62,9 @@ namespace ExpertMultimedia
         {
             if (fps == null)
                 return -1;
-
-            return (int)Math.Floor(Convert.ToDouble(fps) * seconds);
+            int i = (int)Math.Floor(Convert.ToDouble(fps) * seconds);
+            Debug.WriteLine(String.Format("FrameCount: return {0}", i));
+            return i;
         }
         public int FrameCount() {
             StreamInfo stream = this.SelectedStream;

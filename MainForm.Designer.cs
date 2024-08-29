@@ -42,7 +42,6 @@ namespace ExpertMultimedia
             this.lbOut = new System.Windows.Forms.ListBox();
             this.cbAutoscroll = new System.Windows.Forms.CheckBox();
             this.comboInput = new System.Windows.Forms.ComboBox();
-            this.panel1 = new ExpertMultimedia.FrameworkFastPanel();
             this.trackbarFrame = new System.Windows.Forms.TrackBar();
             this.tbH = new System.Windows.Forms.TextBox();
             this.tbM = new System.Windows.Forms.TextBox();
@@ -71,6 +70,7 @@ namespace ExpertMultimedia
             this.scrubStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.progressbarMain = new System.Windows.Forms.ToolStripProgressBar();
             this.tbStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.panel1 = new ExpertMultimedia.FrameworkFastPanel();
             ((System.ComponentModel.ISupportInitialize)(this.trackbarFrame)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMinDigits)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -125,23 +125,11 @@ namespace ExpertMultimedia
             // 
             this.comboInput.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.comboInput.FormattingEnabled = true;
-            this.comboInput.Location = new System.Drawing.Point(152, 73);
+            this.comboInput.Location = new System.Drawing.Point(152, 72);
             this.comboInput.Name = "comboInput";
             this.comboInput.Size = new System.Drawing.Size(140, 23);
             this.comboInput.TabIndex = 14;
             this.comboInput.Visible = false;
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.SystemColors.Control;
-            this.panel1.GraphicTest = ExpertMultimedia.FrameworkFastPanel.GraphicTestMethods.DrawTest;
-            this.panel1.Location = new System.Drawing.Point(3, 3);
-            this.panel1.Name = "panel1";
-            this.panel1.PaintMethod = ExpertMultimedia.FrameworkFastPanel.DoubleBufferMethod.NoDoubleBuffer;
-            this.panel1.Size = new System.Drawing.Size(205, 153);
-            this.panel1.TabIndex = 16;
-            this.panel1.Click += new System.EventHandler(this.Panel1Click);
-            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.Panel1Paint);
             // 
             // trackbarFrame
             // 
@@ -447,6 +435,20 @@ namespace ExpertMultimedia
             this.tbStatus.Name = "tbStatus";
             this.tbStatus.Size = new System.Drawing.Size(57, 17);
             this.tbStatus.Text = "Welcome";
+            this.tbStatus.Click += new System.EventHandler(this.tbStatus_Click);
+            this.tbStatus.TextChanged += new System.EventHandler(this.tbStatus_TextChanged);
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.Control;
+            this.panel1.GraphicTest = ExpertMultimedia.FrameworkFastPanel.GraphicTestMethods.DrawTest;
+            this.panel1.Location = new System.Drawing.Point(3, 3);
+            this.panel1.Name = "panel1";
+            this.panel1.PaintMethod = ExpertMultimedia.FrameworkFastPanel.DoubleBufferMethod.NoDoubleBuffer;
+            this.panel1.Size = new System.Drawing.Size(205, 153);
+            this.panel1.TabIndex = 16;
+            this.panel1.Click += new System.EventHandler(this.Panel1Click);
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.Panel1Paint);
             // 
             // MainForm
             // 

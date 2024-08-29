@@ -19,15 +19,17 @@ namespace ExpertMultimedia
         private string fps = null;
         public List<string> StreamFlags = new List<string>();
         public Dictionary<string, string> StreamMeta = new Dictionary<string, string>();
-        public int Index { get; set; }
-        public int SubIndex { get; set; }
-        public string SubIndexName { get; set; }
-        public string StreamType { get; set; }
-        public string Codec { get; set; }
-        public string Resolution { get; set; }
+        public int Index = 0;
+        public int SubIndex = 0;
+        public string SubIndexName = null;
+        public string StreamType = null;
+        public string Codec = null;
+        public string Resolution = null;
+        public int Width = 0;
+        public int Height = 0;
         public List<int> SAR = new List<int>();
         public List<int> DAR = new List<int>();
-        public string DataRate { get; set; }
+        public string DataRate= null;
         public string Fps
         {
             get { return fps; }
@@ -39,8 +41,8 @@ namespace ExpertMultimedia
                 }
             }
         }
-        public string Tbr { get; set; }
-        public string Tbn { get; set; }
-        public string Tbc { get; set; }
+        public string Tbr = null;
+        public string Tbn = null;
+        public string Tbc = null;
     }
 }
