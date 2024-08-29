@@ -302,6 +302,39 @@ namespace ExpertMultimedia {
         Bitmap GetVideoFrameAsBitmap(string SourceFile_FullName, int iFrame, RCallback callbackNow)
         {
             Bitmap bmpReturn = null;
+            bool bGood = false;
+            decimal dFPS = 29.97m;
+            int iFPS = 30;
+            bool bDropFrame = true;
+            string sTimeCode = "";
+
+            bool expectsBinaryOutput = false;
+
+            // TODO: Test via image comparison of a whole MJPEG animation [output from sequential frame dump command].
+            //   THIS GETS ALL FRAMES USING ONE CALL TO FFMPEG:
+            //   ffmpeg -i input.dv -r 25 -f image2 images%05d.png
+
+            //"+iFrame.ToString()+"
+            //ffmpeg -i swing.avi -s 320×240 -vframes 1 -f singlejpeg swing.jpg
+            //ffmpeg -i swing.avi -s 320×240 -vframes 1 -f mjpeg swing.jpg
+            //-ss 0:0:20 gets frame at a time signature
+            //MY VERSION:
+            //ffmpeg "-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg \""+DestBase_FullName+"%05d.jpg\""
+            //%05d is for 5 digits
+
+            string inputFile = SourceFile_FullName;
+            string outputFile = tempFramePath;
+            // See <https://stackoverflow.com/a/50697975>:
+
+            if (sCommand_ffmpeg.Contains(char.ToString(Path.DirectorySeparatorChar)))
+            {
+                // It is a full path rather using the system path, so fail if not present.
+                if (!File.Exists(sCommand_ffmpeg))
+                {
+                    callbackNow.UpdateStatus("Error: \"" + sCommand_ffmpeg + "\" does not exist.");
+                    return null;
+                }
+            }
 
             // Setup the FFMPEG process
             var procFFMPEG = new System.Diagnostics.Process();
@@ -310,23 +343,57 @@ namespace ExpertMultimedia {
             procFFMPEG.StartInfo.RedirectStandardOutput = true;
             procFFMPEG.StartInfo.RedirectStandardError = true;
             procFFMPEG.StartInfo.CreateNoWindow = true;
-            procFFMPEG.StartInfo.Arguments = String.Format("-i \"{0}\" -ss {1} -r 29.97 -f mjpeg -",
-                SourceFile_FullName, RConvert.FrameToHMSDotMs(iFrame, 30, true));
+            // procFFMPEG.StartInfo.WindowStyle=System.Diagnostics.ProcessWindowStyle.Hidden;// psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            // procFFMPEG.EnableRaisingEvents = true;
+            //TODO:? -s 640x480 sets size
+            //TODO:? ask user for framerate?
+            //-r 30 forces 30fps
+            //-y overwrites destination
+            sTimeCode = RConvert.FrameToHMSDotMs(iFrame, iFPS, true);
 
-            // Assign handlers for ErrorDataReceived and OutputDataReceived
-            procFFMPEG.ErrorDataReceived += new DataReceivedEventHandler(HandleFFMPEGErrorData);
-            procFFMPEG.OutputDataReceived += new DataReceivedEventHandler(HandleFFMPEGOutputData);
+            procFFMPEG.StartInfo.Arguments = String.Format(
+                "-i \"{0}\" -ss {1} -r {2} -nostdin -y -vframes 1 -f mjpeg -",
+                SourceFile_FullName, sTimeCode, dFPS.ToString("#.#")
+            );
+            // Environment.CurrentDirectory = sDestFolder;
+            // psi.Arguments = "-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
+            // ImageConverter ic = new ImageConverter();
 
+            // Determine if we expect binary output to stdout
+            expectsBinaryOutput = procFFMPEG.StartInfo.Arguments.EndsWith(" -");
+
+            Debug.WriteLine(String.Format("Running command: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments));
             callbackNow.UpdateStatus(String.Format("Running command: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments));
 
             try
             {
                 procFFMPEG.Start();
-                procFFMPEG.BeginErrorReadLine();
-                procFFMPEG.BeginOutputReadLine();
+
+                // Read stdout if expecting binary data
+                if (expectsBinaryOutput)
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        procFFMPEG.StandardOutput.BaseStream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                        bmpReturn = (Bitmap)Bitmap.FromStream(memoryStream);
+                    }
+
+                    callbackNow.WriteLine("Bitmap successfully retrieved.");
+                }
 
                 // Wait for FFMPEG to finish processing
                 procFFMPEG.WaitForExit();
+
+                // Only read stderr if not expecting binary output
+                if (!expectsBinaryOutput)
+                {
+                    string errorLine;
+                    while ((errorLine = procFFMPEG.StandardError.ReadLine()) != null)
+                    {
+                        callbackNow.WriteLine(errorLine);
+                    }
+                }
 
                 // Check the exit code for success/failure
                 if (procFFMPEG.ExitCode != 0)
@@ -334,20 +401,6 @@ namespace ExpertMultimedia {
                     callbackNow.WriteLine(String.Format("FFMPEG exited with code {0}. Output may be incomplete.", procFFMPEG.ExitCode));
                     return null;
                 }
-
-                // Ensure the output stream is fully read
-                using (var memoryStream = new MemoryStream())
-                {
-                    procFFMPEG.StandardOutput.BaseStream.CopyTo(memoryStream);
-
-                    // Ensure that the stream position is set to the beginning
-                    memoryStream.Position = 0;
-
-                    // Convert the memory stream to a Bitmap
-                    bmpReturn = (Bitmap)Bitmap.FromStream(memoryStream);
-                }
-
-                callbackNow.WriteLine("Bitmap successfully retrieved.");
             }
             catch (Exception ex)
             {
@@ -359,23 +412,6 @@ namespace ExpertMultimedia {
             }
 
             return bmpReturn;
-
-            // Handlers for DataReceived events
-            void HandleFFMPEGErrorData(object sender, DataReceivedEventArgs eventArgs)
-            {
-                if (eventArgs.Data != null)
-                {
-                    callbackNow.WriteLine(eventArgs.Data);
-                }
-            }
-
-            void HandleFFMPEGOutputData(object sender, DataReceivedEventArgs eventArgs)
-            {
-                if (eventArgs.Data != null)
-                {
-                    callbackNow.WriteLine(eventArgs.Data);
-                }
-            }
         }
 
 
