@@ -83,23 +83,23 @@ namespace ExpertMultimedia
             this.tablelayoutpanelSideBarInner2Col.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
-            //
+            // 
             // tbInput
-            //
+            // 
             this.tbInput.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbInput.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbInput.Location = new System.Drawing.Point(3, 3);
             this.tbInput.Name = "tbInput";
             this.tbInput.Size = new System.Drawing.Size(291, 21);
             this.tbInput.TabIndex = 5;
-            //
+            // 
             // ofiledlg
-            //
+            // 
             this.ofiledlg.FileName = "openFileDialog1";
             this.ofiledlg.FileOk += new System.ComponentModel.CancelEventHandler(this.OfiledlgFileOk);
-            //
+            // 
             // lbOut
-            //
+            // 
             this.lbOut.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbOut.FormattingEnabled = true;
             this.lbOut.HorizontalScrollbar = true;
@@ -108,9 +108,9 @@ namespace ExpertMultimedia
             this.lbOut.Name = "lbOut";
             this.lbOut.Size = new System.Drawing.Size(291, 296);
             this.lbOut.TabIndex = 12;
-            //
+            // 
             // cbAutoscroll
-            //
+            // 
             this.cbAutoscroll.AutoSize = true;
             this.cbAutoscroll.Checked = true;
             this.cbAutoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -120,19 +120,19 @@ namespace ExpertMultimedia
             this.cbAutoscroll.TabIndex = 13;
             this.cbAutoscroll.Text = "Scroll Output Messages";
             this.cbAutoscroll.UseVisualStyleBackColor = true;
-            //
+            // 
             // comboInput
-            //
+            // 
             this.comboInput.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.comboInput.FormattingEnabled = true;
-            this.comboInput.Location = new System.Drawing.Point(152, 72);
+            this.comboInput.Location = new System.Drawing.Point(152, 73);
             this.comboInput.Name = "comboInput";
             this.comboInput.Size = new System.Drawing.Size(140, 23);
             this.comboInput.TabIndex = 14;
             this.comboInput.Visible = false;
-            //
+            // 
             // panel1
-            //
+            // 
             this.panel1.BackColor = System.Drawing.SystemColors.Control;
             this.panel1.GraphicTest = ExpertMultimedia.FrameworkFastPanel.GraphicTestMethods.DrawTest;
             this.panel1.Location = new System.Drawing.Point(3, 3);
@@ -142,9 +142,9 @@ namespace ExpertMultimedia
             this.panel1.TabIndex = 16;
             this.panel1.Click += new System.EventHandler(this.Panel1Click);
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.Panel1Paint);
-            //
+            // 
             // trackbarFrame
-            //
+            // 
             this.trackbarFrame.Dock = System.Windows.Forms.DockStyle.Fill;
             this.trackbarFrame.LargeChange = 1;
             this.trackbarFrame.Location = new System.Drawing.Point(3, 522);
@@ -154,37 +154,37 @@ namespace ExpertMultimedia
             this.trackbarFrame.TabIndex = 18;
             this.trackbarFrame.Scroll += new System.EventHandler(this.TrackbarFrameScroll);
             this.trackbarFrame.ValueChanged += new System.EventHandler(this.TrackbarFrameValueChanged);
-            //
+            // 
             // tbH
-            //
+            // 
             this.tbH.Location = new System.Drawing.Point(3, 18);
             this.tbH.Name = "tbH";
             this.tbH.Size = new System.Drawing.Size(33, 23);
             this.tbH.TabIndex = 20;
-            //
+            // 
             // tbM
-            //
+            // 
             this.tbM.Location = new System.Drawing.Point(42, 18);
             this.tbM.Name = "tbM";
             this.tbM.Size = new System.Drawing.Size(33, 23);
             this.tbM.TabIndex = 21;
-            //
+            // 
             // tbS
-            //
+            // 
             this.tbS.Location = new System.Drawing.Point(81, 18);
             this.tbS.Name = "tbS";
             this.tbS.Size = new System.Drawing.Size(33, 23);
             this.tbS.TabIndex = 22;
-            //
+            // 
             // tbMs
-            //
+            // 
             this.tbMs.Location = new System.Drawing.Point(120, 18);
             this.tbMs.Name = "tbMs";
             this.tbMs.Size = new System.Drawing.Size(45, 23);
             this.tbMs.TabIndex = 23;
-            //
+            // 
             // lblHColon
-            //
+            // 
             this.lblHColon.AutoSize = true;
             this.lblHColon.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblHColon.Location = new System.Drawing.Point(3, 0);
@@ -192,9 +192,9 @@ namespace ExpertMultimedia
             this.lblHColon.Size = new System.Drawing.Size(17, 15);
             this.lblHColon.TabIndex = 24;
             this.lblHColon.Text = "h:";
-            //
+            // 
             // lblMColon
-            //
+            // 
             this.lblMColon.AutoSize = true;
             this.lblMColon.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMColon.Location = new System.Drawing.Point(42, 0);
@@ -202,9 +202,9 @@ namespace ExpertMultimedia
             this.lblMColon.Size = new System.Drawing.Size(21, 15);
             this.lblMColon.TabIndex = 25;
             this.lblMColon.Text = "m:";
-            //
+            // 
             // lblSColon
-            //
+            // 
             this.lblSColon.AutoSize = true;
             this.lblSColon.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSColon.Location = new System.Drawing.Point(81, 0);
@@ -212,9 +212,9 @@ namespace ExpertMultimedia
             this.lblSColon.Size = new System.Drawing.Size(17, 15);
             this.lblSColon.TabIndex = 26;
             this.lblSColon.Text = "s:";
-            //
+            // 
             // lblMSColon
-            //
+            // 
             this.lblMSColon.AutoSize = true;
             this.lblMSColon.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMSColon.Location = new System.Drawing.Point(120, 0);
@@ -222,9 +222,9 @@ namespace ExpertMultimedia
             this.lblMSColon.Size = new System.Drawing.Size(28, 15);
             this.lblMSColon.TabIndex = 27;
             this.lblMSColon.Text = "ms:";
-            //
+            // 
             // nudMinDigits
-            //
+            // 
             this.nudMinDigits.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.nudMinDigits.Location = new System.Drawing.Point(152, 3);
             this.nudMinDigits.Maximum = new decimal(new int[] {
@@ -241,9 +241,9 @@ namespace ExpertMultimedia
             0,
             0});
             this.nudMinDigits.ValueChanged += new System.EventHandler(this.NudMinDigitsValueChanged);
-            //
+            // 
             // lblMinDigits
-            //
+            // 
             this.lblMinDigits.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblMinDigits.AutoSize = true;
             this.lblMinDigits.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -253,9 +253,9 @@ namespace ExpertMultimedia
             this.lblMinDigits.TabIndex = 29;
             this.lblMinDigits.Text = "Sequence Digits *0000.*";
             this.lblMinDigits.TextAlign = System.Drawing.ContentAlignment.BottomRight;
-            //
+            // 
             // menuStrip1
-            //
+            // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.framesToolStripMenuItem,
@@ -266,89 +266,89 @@ namespace ExpertMultimedia
             this.menuStrip1.Size = new System.Drawing.Size(866, 24);
             this.menuStrip1.TabIndex = 30;
             this.menuStrip1.Text = "menuStrip1";
-            //
+            // 
             // fileToolStripMenuItem
-            //
+            // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openVideoToolStripMenuItem,
             this.openImageSequenceToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
-            //
+            // 
             // openVideoToolStripMenuItem
-            //
+            // 
             this.openVideoToolStripMenuItem.Name = "openVideoToolStripMenuItem";
             this.openVideoToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
             this.openVideoToolStripMenuItem.Text = "Open Video...";
             this.openVideoToolStripMenuItem.Click += new System.EventHandler(this.OpenVideoToolStripMenuItemClick);
-            //
+            // 
             // openImageSequenceToolStripMenuItem
-            //
+            // 
             this.openImageSequenceToolStripMenuItem.Name = "openImageSequenceToolStripMenuItem";
             this.openImageSequenceToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
             this.openImageSequenceToolStripMenuItem.Text = "Open Image Sequence...";
             this.openImageSequenceToolStripMenuItem.Click += new System.EventHandler(this.OpenImageSequenceToolStripMenuItemClick);
-            //
+            // 
             // framesToolStripMenuItem
-            //
+            // 
             this.framesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.maskToAlphaToolStripMenuItem,
             this.videoToSequenceMJPEGLosslessToolStripMenuItem});
             this.framesToolStripMenuItem.Name = "framesToolStripMenuItem";
             this.framesToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
             this.framesToolStripMenuItem.Text = "Frame&s";
-            //
+            // 
             // maskToAlphaToolStripMenuItem
-            //
+            // 
             this.maskToAlphaToolStripMenuItem.Name = "maskToAlphaToolStripMenuItem";
             this.maskToAlphaToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
             this.maskToAlphaToolStripMenuItem.Text = "Mask to Alpha";
             this.maskToAlphaToolStripMenuItem.Click += new System.EventHandler(this.MaskToAlphaToolStripMenuItemClick);
-            //
+            // 
             // videoToSequenceMJPEGLosslessToolStripMenuItem
-            //
+            // 
             this.videoToSequenceMJPEGLosslessToolStripMenuItem.Name = "videoToSequenceMJPEGLosslessToolStripMenuItem";
             this.videoToSequenceMJPEGLosslessToolStripMenuItem.Size = new System.Drawing.Size(261, 22);
             this.videoToSequenceMJPEGLosslessToolStripMenuItem.Text = "Video to Sequence (MJPEG lossless)";
             this.videoToSequenceMJPEGLosslessToolStripMenuItem.Click += new System.EventHandler(this.VideoToSequenceMJPEGLosslessToolStripMenuItemClick);
-            //
+            // 
             // controlToolStripMenuItem
-            //
+            // 
             this.controlToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cancelToolStripMenuItem});
             this.controlToolStripMenuItem.Name = "controlToolStripMenuItem";
             this.controlToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.controlToolStripMenuItem.Text = "&Control";
-            //
+            // 
             // cancelToolStripMenuItem
-            //
+            // 
             this.cancelToolStripMenuItem.Name = "cancelToolStripMenuItem";
             this.cancelToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.cancelToolStripMenuItem.Text = "Cance&l";
             this.cancelToolStripMenuItem.Click += new System.EventHandler(this.CancelToolStripMenuItemClick);
-            //
+            // 
             // splitContainer1
-            //
+            // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Name = "splitContainer1";
-            //
+            // 
             // splitContainer1.Panel1
-            //
+            // 
             this.splitContainer1.Panel1.Controls.Add(this.tablelayoutpanelSidePanelOuter1Col);
-            //
+            // 
             // splitContainer1.Panel2
-            //
+            // 
             this.splitContainer1.Panel2.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("splitContainer1.Panel2.BackgroundImage")));
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
             this.splitContainer1.Size = new System.Drawing.Size(866, 574);
             this.splitContainer1.SplitterDistance = 297;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 19;
-            //
+            // 
             // tablelayoutpanelSidePanelOuter1Col
-            //
+            // 
             this.tablelayoutpanelSidePanelOuter1Col.ColumnCount = 1;
             this.tablelayoutpanelSidePanelOuter1Col.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tablelayoutpanelSidePanelOuter1Col.Controls.Add(this.tbInput, 0, 0);
@@ -372,9 +372,9 @@ namespace ExpertMultimedia
             this.tablelayoutpanelSidePanelOuter1Col.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tablelayoutpanelSidePanelOuter1Col.Size = new System.Drawing.Size(297, 574);
             this.tablelayoutpanelSidePanelOuter1Col.TabIndex = 1;
-            //
+            // 
             // tableLayoutPanel1
-            //
+            // 
             this.tableLayoutPanel1.AutoSize = true;
             this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 4;
@@ -397,9 +397,9 @@ namespace ExpertMultimedia
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(168, 44);
             this.tableLayoutPanel1.TabIndex = 31;
-            //
+            // 
             // tablelayoutpanelSideBarInner2Col
-            //
+            // 
             this.tablelayoutpanelSideBarInner2Col.ColumnCount = 2;
             this.tablelayoutpanelSideBarInner2Col.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tablelayoutpanelSideBarInner2Col.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
@@ -415,9 +415,9 @@ namespace ExpertMultimedia
             this.tablelayoutpanelSideBarInner2Col.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.tablelayoutpanelSideBarInner2Col.Size = new System.Drawing.Size(291, 115);
             this.tablelayoutpanelSideBarInner2Col.TabIndex = 0;
-            //
+            // 
             // statusStrip1
-            //
+            // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.scrubStatus,
             this.progressbarMain,
@@ -427,29 +427,29 @@ namespace ExpertMultimedia
             this.statusStrip1.Size = new System.Drawing.Size(866, 22);
             this.statusStrip1.TabIndex = 31;
             this.statusStrip1.Text = "statusStrip1";
-            //
+            // 
             // scrubStatus
-            //
+            // 
             this.scrubStatus.Name = "scrubStatus";
             this.scrubStatus.Size = new System.Drawing.Size(24, 17);
             this.scrubStatus.Text = "0/0";
-            //
+            // 
             // progressbarMain
-            //
+            // 
             this.progressbarMain.AutoSize = false;
             this.progressbarMain.Name = "progressbarMain";
             this.progressbarMain.Size = new System.Drawing.Size(100, 16);
             this.progressbarMain.Step = 1;
             this.progressbarMain.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            //
+            // 
             // tbStatus
-            //
+            // 
             this.tbStatus.Name = "tbStatus";
             this.tbStatus.Size = new System.Drawing.Size(57, 17);
             this.tbStatus.Text = "Welcome";
-            //
+            // 
             // MainForm
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(866, 620);
