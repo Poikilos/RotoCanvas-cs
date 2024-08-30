@@ -33,7 +33,8 @@ namespace ExpertMultimedia {
         public bool UpdateForm() {
             if (formX != null) {
                 if (formX.InvokeRequired) {
-                    formX.Invoke((MethodInvoker)delegate { formX.Refresh(); });
+                    // Do nothing, because if it is in a thread, there is no need to refresh!
+                    // formX.Invoke((MethodInvoker)delegate { formX.Refresh(); });
                 }
                 else {
                     formX.Refresh();
@@ -101,7 +102,7 @@ namespace ExpertMultimedia {
                 Console.Error.WriteLine(exn.Message);
                 // return false;
             }
-            if (bGood) bGood=UpdateForm();
+            // if (bGood) bGood=UpdateForm(); // Don't overdo it. Use threads and invoke instead.
             // return bGood;
         }
         public void WriteLine(string msg) {
@@ -181,7 +182,8 @@ namespace ExpertMultimedia {
         }
 
         public bool UpdateStatus() {
-            return UpdateForm();
+            // return UpdateForm();  // Don't overdo it. Use threads and invoke instead.
+            return true;
         }
 
     }

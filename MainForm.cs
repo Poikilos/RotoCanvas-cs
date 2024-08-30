@@ -34,9 +34,11 @@ namespace ExpertMultimedia
         string videos = null;
         string devVideoPath = null;
         public RotoCanvas rotocanvasNow=null;
-        static System.Timers.Timer testTimer = null;
-        System.Timers.Timer startTimer = null;
+        // System.Timers.Timer is not thread safe by default, so:
+        static System.Windows.Forms.Timer testTimer = null;
+        System.Windows.Forms.Timer startTimer = null;
         bool _started = false;
+        bool _testStarted = false;
 
         public MainForm()
         {
@@ -75,22 +77,27 @@ namespace ExpertMultimedia
         }
 
         void MainFormLoad(object sender, EventArgs e) {
-            string sFileTheoretical=@"D:\Videos\Projects\Rebel Assault IX\RAIX2b\Scene04 (Speeder Bikes)\shot1 (from left)\2b3_3 manual deshake\RAIX2b-scene-speederbikes-shot1-0001.png";
+            // string tryPath = @"D:\Videos\Projects\Rebel Assault IX\RAIX2b\Scene04 (Speeder Bikes)\shot1 (from left)\2b3_3 manual deshake\RAIX2b-scene-speederbikes-shot1-0001.png";
+            string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string tryPath = Path.Combine(profile, @"Videos\The Secret of Cooey\media\Darkness Ethereal - The Secret of Cooey - 1998.mp4");
             tbInput.Text = "";
-            if (File.Exists(sFileTheoretical)) tbInput.Text = sFileTheoretical;
+            if (File.Exists(tryPath)) tbInput.Text = tryPath;
             else if (File.Exists(devVideoPath)) tbInput.Text = devVideoPath;
 
             if (tbInput.Text != "") {
-                DebugWriteLine("found test file \""+tbInput.Text+"\"");
+                DebugWriteLine("found test file \""+tbInput.Text+"\"");  // loaded in testTimer_Tick
                 Application.DoEvents();
-                // this.OpenVideoFromInput();
-                testTimer = new System.Timers.Timer();
+                // this.OpenVideoFromInput();  // called in testTimer_Tick
+                testTimer = new System.Windows.Forms.Timer();
                 testTimer.Interval = 50;
-                testTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.testTimer_Tick);
-                //TODO: testTimer.Start();
-                this.startTimer = new System.Timers.Timer();
+                // System.Threading.Timer uses:
+                // testTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.testTimer_Tick);
+                testTimer.Tick += new EventHandler(this.testTimer_Tick);
+                testTimer.Start();
+                this.startTimer = new System.Windows.Forms.Timer();
                 startTimer.Interval = 1;
-                startTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.startTimer_Tick);
+                startTimer.Tick += new EventHandler(this.startTimer_Tick);
+                startTimer.Start();
             }
             else {
                 DebugWriteLine("There is no test file.");
@@ -99,6 +106,8 @@ namespace ExpertMultimedia
 
         private void testTimer_Tick(object sender, EventArgs e)
         {
+            if (_testStarted) return;
+            _testStarted = true;
             testTimer.Stop();
             this.OpenVideoFromInput();
         }
@@ -175,7 +184,7 @@ namespace ExpertMultimedia
             ofd = new System.Windows.Forms.OpenFileDialog();
             ofd.Title = "Open Video";
             // string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            // ^ recent versions of C# only
+            // ^ recent versions of C# only (older versions may have MyDocuments)
             ofd.InitialDirectory = videos;
             result = ofd.ShowDialog();
             if (result != DialogResult.OK) {
@@ -190,9 +199,12 @@ namespace ExpertMultimedia
             cancelToolStripMenuItem.Enabled=true;
             //GetInputAsync("RotoCanvas.OpenSeq","Open Image Sequence:",new string[]{"OK","Cancel"},MainForm.InputTypeImage);
             rotocanvasNow.OpenSeq(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
-            this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
-            this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
-            this.trackbarFrame.Value=rotocanvasNow.get_CurrentIndex();
+            this.trackbarFrame.Minimum=rotocanvasNow.FirstFrameNumber;
+            this.trackbarFrame.Maximum=rotocanvasNow.LastFrameNumber;
+            Debug.WriteLine("trackbarFrame.Minimum=={0}", trackbarFrame.Minimum);
+            Debug.WriteLine("trackbarFrame.Minimum=={0}", trackbarFrame.Minimum);
+            Debug.WriteLine("trackbarFrame.Maximum=={0}", trackbarFrame.Maximum);
+
         }
 
         void MaskToAlphaToolStripMenuItemClick(object sender, EventArgs e)
@@ -226,7 +238,8 @@ namespace ExpertMultimedia
             //}
             if (rotocanvasNow.riFrame!=null) {
                 System.Drawing.Size size = new Size(rotocanvasNow.riFrame.Width, rotocanvasNow.riFrame.Height);
-                System.Diagnostics.Debug.WriteLine("Panel1Paint {riFrame.iFrame:"+rotocanvasNow.get_CurrentIndex()+"; size: "+size.ToString()+"}");
+                Debug.WriteLine("Panel1Paint rotocanvasNow.FrameNumber={0}; size: {1}",
+                    rotocanvasNow.FrameNumber, size);
                 if (panel1.Width!=rotocanvasNow.riFrame.Width) panel1.Width=rotocanvasNow.riFrame.Width;
                 if (panel1.Height!=rotocanvasNow.riFrame.Height) panel1.Height=rotocanvasNow.riFrame.Height;
                 rotocanvasNow.DrawFrame(callbackNow);
@@ -246,17 +259,21 @@ namespace ExpertMultimedia
             DebugWriteLine("OpenVideo \""+path+"\"...");
             tbInput.Text = path;
             rotocanvasNow.OpenVideo(tbInput.Text,RConvert.ToInt(this.nudMinDigits.Value),callbackNow);
-            this.trackbarFrame.Minimum=rotocanvasNow.get_FirstIndex();
-            Debug.WriteLine(String.Format("rotocanvasNow.get_FirstIndex(): {0}", rotocanvasNow.get_FirstIndex()));
-            this.trackbarFrame.Maximum=rotocanvasNow.get_LastIndex();
-            Debug.WriteLine(String.Format("rotocanvasNow.get_LastIndex(): {0}", rotocanvasNow.get_LastIndex()));
-            int frame = rotocanvasNow.get_CurrentIndex();
+            this.trackbarFrame.Minimum=rotocanvasNow.FirstFrameNumber;
+            Debug.WriteLine("rotocanvasNow.FirstFrameNumber: {0}", rotocanvasNow.FirstFrameNumber);
+            this.trackbarFrame.Maximum=rotocanvasNow.LastFrameNumber;
+            Debug.WriteLine("rotocanvasNow.LastFrameNumber: {0}", rotocanvasNow.LastFrameNumber);
+            int frame = rotocanvasNow.FrameNumber;
             if (frame < 0) {
                 frame = 0;
             }
             this.trackbarFrame.Value = frame;
-            DebugWriteLine("GotoFrame \""+frame.ToString()+"\"...");
+            DebugWriteLine(String.Format("GotoFrame {0}...", frame));
             this.GotoFrame(frame);
+            if (rotocanvasNow.FrameNumber != frame) {
+                // throw new ApplicationException("failed");  // TODO: allow async instead.
+                Debug.WriteLine("Warning: frame is still {0} not {1} (async or failed)", rotocanvasNow.FrameNumber, frame);
+            }
             this.panel1.Invalidate();
         }
 

@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Diagnostics;  // Debug, Process, ProcessStartInfo
 using System.Drawing;
+// using System.Reflection;  // MethodBase
 // using System.Threading.Tasks;
 using System.Text.RegularExpressions;  // Regex, RegexOptions
 
@@ -26,7 +27,7 @@ namespace ExpertMultimedia {
         private int iFirstIndex=0;
         private int iLastIndex=0;
         private Bitmap bmpFFMPEG=null;
-        private int iFrame=-2;
+        private int iFrame = -2;
         private int FrameLastDrawn=-1;
         public static string tempsDir = System.IO.Path.GetTempPath();
         private string myTempDir=null;
@@ -41,12 +42,13 @@ namespace ExpertMultimedia {
         public VideoInfo videoinfo = null;
         #endregion variables
 
-        public int FrameCount {
-            get { return iLastIndex - 1; }
-        }
-        public int FrameNumber {
-            get { return iFrame; }
-        }
+        public int FrameCount { get { return iLastIndex - 1; } }
+        // public int get_CurrentIndex()
+        public int FrameNumber { get { return iFrame; } }
+        // public int get_FirstIndex()
+        public int FirstFrameNumber { get { return iFirstIndex; } }
+        // public int get_LastIndex()
+        public int LastFrameNumber { get { return iLastIndex; } }
 
 
         #region constructors
@@ -63,20 +65,9 @@ namespace ExpertMultimedia {
         }
         #endregion constructors
 
-        #region get and set
-        public int get_FirstIndex() {
-            return iFirstIndex;
-        }
-        public int get_LastIndex() {
-            return iLastIndex;
-        }
-        public int get_CurrentIndex() {
-            return iFrame;
-        }
-        #endregion get and set
-
         #region file open and close
         public void OpenVideo(string sFilein, int iMinDigits, RCallback callbackNow) {//RString.StartsWith(FunctionName,"RotoCanvas.OpenVideo")) {
+            int StartFrameNumber = 0;
             OpenedFile_MinDigits=iMinDigits;//shouldn't matter with video
             int iDot=RString.LastIndexOf(sFilein,'.');
             this.videoinfo = FfmpegSession.GetVideoInfo(sFilein);
@@ -86,20 +77,39 @@ namespace ExpertMultimedia {
                 iFirstIndex=0;
                 //if (OpenedFile_FullBaseName.Contains("RebelAssaultIX0a(raw,1996version,fixed-beginning-version)")) this.trackbarFrame.Maximum=7307;//TODO: detect this
                 //else {
-                iLastIndex = this.videoinfo.FrameCount() - 1;  // a.k.a. .Maximum, frameCount
-                Debug.WriteLine(String.Format("iLastIndex={0}", iLastIndex));
-                //}
-                if (iLastIndex < 1) {
-                    iLastIndex = 1;  // TODO: instead, hide animation interface if < 1
+                iLastIndex = this.videoinfo.FrameCount - 1;  // a.k.a. .Maximum, frameCount
+                if (iLastIndex < 0)
+                {
+                    throw new BadImageFormatException(String.Format("Got FrameCount {0}", this.videoinfo.FrameCount));
+                    // iLastIndex = 0;
                 }
+                // TODO: hide animation interface if < 1
+                Debug.WriteLine("iLastIndex={0}", iLastIndex);
+                //}
                 iFrame = -1; // set by GotoFrame if successful
-                GotoFrame(0,iMinDigits,callbackNow);
+                assertFrameInRange(StartFrameNumber);
+                GotoFrame(StartFrameNumber, iMinDigits, callbackNow);
+                if (iFrame != StartFrameNumber)
+                    throw new ApplicationException("GotoFrame failed to set frame#");
             }
             else {
-                OpenedFile_FullBaseName="";
+                throw new NotImplementedException("No extension"); // Make sure this is used properly somehow
+                OpenedFile_FullBaseName ="";
                 OpenedFile_Ext="";
             }
         }//end OpenVideo
+        public void assertFrameInRange(int iFrameX)
+        {
+            if (iFrameX < 0)
+            {
+                throw new ArgumentOutOfRangeException(String.Format("Negative iFrame = {0}", iFrameX));
+            }
+            else if (iFrameX > LastFrameNumber)
+            {
+                throw new ArgumentOutOfRangeException(String.Format(
+                    "iFrame {0} > LastFrameNumber {1}", iFrameX, LastFrameNumber));
+            }
+        }
 
         public void OpenSeq(string sFilein, int iMinDigits, RCallback callbackNow) { //if (RString.StartsWith(FunctionName,"RotoCanvas.OpenSeq")) {
             //callbackNow.SetStatus(MainForm.sMyName+": "+FrameworkFormInputValue);
@@ -116,7 +126,7 @@ namespace ExpertMultimedia {
             }
             iLastIndex=iFrameNow;
             iFirstIndex=iFrameStart;
-            iFrame=iFrameStart;
+            iFrame = iFrameStart;
             callbackNow.WriteLine("drawing frame...");
             GotoFrame(iFrame,iMinDigits,callbackNow);
             callbackNow.UpdateStatus("OpenSeq...OK (frames:"+(iLastIndex-iFirstIndex+1).ToString()+")");
@@ -156,23 +166,23 @@ namespace ExpertMultimedia {
                 }
                 string DestBase_FullName=sDestFolder+RString.sDirSep+DestBase_Name; //SourceFile_FullName;
                 callbackNow.WriteLine("using DestBase_FullName "+RReporting.StringMessage(DestBase_FullName,true)+"...");
-                int iFrame=0;
+                int thisFrameI=0;
                 bool bFoundFrame=true;
                 //i.e.: ffmpeg -i "E:\Videos\Projects\Demo Reel\Rebel Assault IX\RebelAssaultIX0a(raw,1996version,fixed-beginning-version).avi" -vframes 1 -r 3352 -f mjpeg "E:\Videos\Projects\Demo Reel\Rebel Assault IX\RebelAssaultIX0a(raw,1996version,fixed-beginning-version)_ffmpeg3352.jpg"
                 bCancel=false;
                 while (bFoundFrame) {
-                    string DestFrameNow_FullName=DestBase_FullName+iFrame.ToString("D4")+".jpg";
+                    string DestFrameNow_FullName=DestBase_FullName+thisFrameI.ToString("D4")+".jpg";
 
-                    SaveFrame(DestFrameNow_FullName,SourceFile_FullName,iFrame,callbackNow);
+                    SaveFrame(DestFrameNow_FullName,SourceFile_FullName,thisFrameI,callbackNow);
                     if (File.Exists(DestFrameNow_FullName)) {
                         FileInfo fiResult=new FileInfo(DestFrameNow_FullName);
                         if (fiResult.Length<=8) {
                             bFoundFrame=false;
-                            callbackNow.WriteLine("End of data found before frame "+iFrame.ToString()+" (length was "+fiResult.Length.ToString()+")");
+                            callbackNow.WriteLine("End of data found before frame "+thisFrameI.ToString()+" (length was "+fiResult.Length.ToString()+")");
                         }
                     }
                     else {
-                        callbackNow.WriteLine("End of data found before frame "+iFrame.ToString()+" (no frame)");
+                        callbackNow.WriteLine("End of data found before frame "+thisFrameI.ToString()+" (no frame)");
                         bFoundFrame=false;
                     }
                     //if (MainForm.bClosing) {
@@ -183,7 +193,7 @@ namespace ExpertMultimedia {
                         callbackNow.WriteLine("Operation was cancelled by user.");
                         break;
                     }
-                    iFrame++;
+                    thisFrameI++;
                 }//end while bFoundFrame
             }
             else {
@@ -294,7 +304,7 @@ namespace ExpertMultimedia {
             }
             catch (Exception ex)
             {
-                Console.WriteLine(String.Format("Error: {0}", ex.Message));
+                Console.WriteLine("Error: {0}", ex.Message);
             }
 
             return null;
@@ -363,7 +373,7 @@ namespace ExpertMultimedia {
             // Determine if we expect binary output to stdout
             expectsBinaryOutput = procFFMPEG.StartInfo.Arguments.EndsWith(" -");
 
-            Debug.WriteLine(String.Format("Running command: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments));
+            Debug.WriteLine("Running command: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments);
             callbackNow.UpdateStatus(String.Format("Running command: {0} {1}", sCommand_ffmpeg, procFFMPEG.StartInfo.Arguments));
 
             try
@@ -417,10 +427,19 @@ namespace ExpertMultimedia {
 
 
         public bool GotoFrame(int iFrameX, int iMinDigits, RCallback callbackNow) {//formerly DrawFrame
+            assertFrameInRange(iFrameX);
             bool bGood=false;
             string sFileNow="";
+            if (Debugger.IsAttached)
+            {
+                // MethodBase caller = new StackFrame(1, false).GetMethod();
+                // string callerMethodName = caller.Name;
+                // string calledMethodName = MethodBase.GetCurrentMethod().Name;
+                // Debug.WriteLine("The caller method is: " + callerMethodName);
+                Debug.WriteLine("[GotoFrame] Environment.StackTrace={0}", Environment.StackTrace);
+            }
 
-            System.Drawing.Imaging.ImageFormat imgfmt = RImage.ImageFormatFromExt(OpenedFile_Ext);
+            System.Drawing.Imaging.ImageFormat imgfmt = RImage.ImageFormatFromExt(OpenedFile_Ext);  // Is image? Find out now.
             if (imgfmt.Guid != Guid.Empty) {//imgfmt!=System.Drawing.Imaging.ImageFormat.MemoryBmp) {//image
                 callbackNow.UpdateStatus("Loading frame using image format GUID "+imgfmt.Guid.ToString()+"...");
                 sFileNow=OpenedFile_FullBaseName+(iFrameX).ToString("D"+iMinDigits.ToString())+"."+OpenedFile_Ext;
@@ -501,7 +520,7 @@ namespace ExpertMultimedia {
         }
 
         public void DrawFrame(RCallback callbackNow) {
-            System.Diagnostics.Debug.WriteLine("- DrawFrame");
+            Debug.WriteLine("- DrawFrame");
             if (riFrame.Width>0&&riFrame.Height>0) {
                 if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
                     bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -514,7 +533,7 @@ namespace ExpertMultimedia {
                 ReloadFrameBitmap(callbackNow);
             }
             // callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
-            callbackNow.UpdateStatus("Frame "+iFrame.ToString()+" drawn");
+            callbackNow.UpdateStatus(String.Format("Frame {0}/{1} drawn", FrameNumber, FrameCount));
             // ^ Do NOT refresh, or Invalidate will get called again, causing a loop!
         }
     }//end RotoCanvas

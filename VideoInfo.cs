@@ -58,19 +58,23 @@ namespace ExpertMultimedia
             }
         }
 
-        public static int FrameCount(string fps, double seconds)
+        public static int CountFrames(string fps, double seconds)
         {
             if (fps == null)
                 return -1;
             int i = (int)Math.Floor(Convert.ToDouble(fps) * seconds);
-            Debug.WriteLine(String.Format("FrameCount: return {0}", i));
+            Debug.WriteLine("FrameCount: return {0}", i);
             return i;
         }
-        public int FrameCount() {
-            StreamInfo stream = this.SelectedStream;
-            if (stream == null)
-                return -1;
-            return VideoInfo.FrameCount(stream.Fps, TotalSeconds);
+        public int FrameCount
+        {
+            get
+            {
+                StreamInfo stream = this.SelectedStream;
+                if (stream == null)
+                    return -1;
+                return VideoInfo.CountFrames(stream.Fps, TotalSeconds);
+            }
         }
     }
 }

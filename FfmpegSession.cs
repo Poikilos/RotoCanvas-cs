@@ -76,15 +76,15 @@ namespace ExpertMultimedia
                         int milliseconds = int.Parse(durationMatch.Groups[4].Value);
 
                         videoInfo.Hours = hours;
-                        Debug.WriteLine(String.Format("Hours={0}", hours));
+                        Debug.WriteLine("Hours={0}", hours);
                         videoInfo.Minutes = minutes;
-                        Debug.WriteLine(String.Format("Minutes={0}", minutes));
+                        Debug.WriteLine("Minutes={0}", minutes);
                         videoInfo.Seconds = seconds;
-                        Debug.WriteLine(String.Format("Seconds={0}", seconds));
+                        Debug.WriteLine("Seconds={0}", seconds);
                         videoInfo.Milliseconds = milliseconds;
-                        Debug.WriteLine(String.Format("Milliseconds={0}", milliseconds));
+                        Debug.WriteLine("Milliseconds={0}", milliseconds);
                         videoInfo.TotalSeconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 100.0;
-                        Debug.WriteLine(String.Format("TotalSeconds={0}", videoInfo.TotalSeconds));
+                        Debug.WriteLine("TotalSeconds={0}", videoInfo.TotalSeconds);
                         continue;
                     }
 
@@ -178,7 +178,7 @@ namespace ExpertMultimedia
             }
             catch (Exception ex)
             {
-                Console.WriteLine(String.Format("Error: {0}", ex.Message));
+                Console.WriteLine("Error: {0}", ex.Message);
             }
 
             return videoInfo;
