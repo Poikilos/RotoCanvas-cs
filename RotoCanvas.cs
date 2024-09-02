@@ -37,6 +37,7 @@ namespace ExpertMultimedia {
         public RImage riInterface=null;
         public bool bCancel=false;
         public Bitmap bmpBack=new Bitmap(640,480,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        public bool enableMJPEG = false;
         public static string sCommand_ffmpeg = null;
         public string error = null;
         public VideoInfo videoinfo = null;
@@ -228,7 +229,7 @@ namespace ExpertMultimedia {
                 //-r 30 forces 30fps
                 //-y overwrites destination
                 sTimeCode=RConvert.FrameToHMSDotMs(iFrame,iFPS,true);
-                psi.Arguments="-ss "+sTimeCode+" -i \""+SourceFile_FullName+"\" -r "+dFPS.ToString("#.#")+" -vframes 1 -f mjpeg -y \""+DestFrameNow_FullName+"\"";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
+                psi.Arguments = "-ss " + sTimeCode + " -i \"" + SourceFile_FullName + "\" -r " + dFPS.ToString("#.#") + " -vframes 1 -f mjpeg -y \"" + DestFrameNow_FullName + "\"";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
                 //Environment.CurrentDirectory=sDestFolder;
                 //psi.Arguments="-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
 
@@ -361,11 +362,21 @@ namespace ExpertMultimedia {
             //-r 30 forces 30fps
             //-y overwrites destination
             sTimeCode = RConvert.FrameToHMSDotMs(iFrame, iFPS, true);
-
-            procFFMPEG.StartInfo.Arguments = String.Format(
-                "-i \"{0}\" -ss {1} -r {2} -nostdin -y -vframes 1 -f mjpeg -",
-                SourceFile_FullName, sTimeCode, dFPS.ToString("#.#")
-            );
+            if (enableMJPEG)
+            {
+                procFFMPEG.StartInfo.Arguments = String.Format(
+                    "-i \"{0}\" -ss {1} -r {2} -nostdin -y -vframes 1 -f mjpeg -",
+                    SourceFile_FullName, sTimeCode, dFPS.ToString("#.#")
+                );
+            }
+            else
+            {
+                // image2pipe -pix_fmt bgr24
+                procFFMPEG.StartInfo.Arguments = String.Format(
+                    "-i \"{0}\" -ss {1} -r {2} -nostdin -y -vframes 1 -f image2pipe -vcodec bmp -pix_fmt bgr24 -",
+                    SourceFile_FullName, sTimeCode, dFPS.ToString("#.#")
+                );
+            }
             // Environment.CurrentDirectory = sDestFolder;
             // psi.Arguments = "-i \""+SourceFile_FullName+"\" -r 29.97 -f mjpeg "+DestBase_Name+"%05d.jpg";//"-i \""+SourceFile_FullName+"\" -vframes 1 -f mjpeg \""+sDestFolder+RString.sDirSep+sFileBaseName+iFrame.ToString("D4")+".jpg\""; //D4 is for decimal system and four digits
             // ImageConverter ic = new ImageConverter();
@@ -387,7 +398,8 @@ namespace ExpertMultimedia {
                     {
                         procFFMPEG.StandardOutput.BaseStream.CopyTo(memoryStream);
                         memoryStream.Position = 0;
-                        bmpReturn = (Bitmap)Bitmap.FromStream(memoryStream);
+                        // bmpReturn = (Bitmap)Bitmap.FromStream(memoryStream);
+                        bmpReturn = new Bitmap(memoryStream);
                     }
 
                     callbackNow.WriteLine("Bitmap successfully retrieved.");
