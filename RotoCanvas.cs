@@ -436,12 +436,74 @@ namespace ExpertMultimedia {
 
             return bmpReturn;
         }
+        private bool GotoImageFrame(int iFrameX, int iMinDigits, RCallback callbackNow)
+        {
+            bool bGood = false;
+            string sFileNow = OpenedFile_FullBaseName + (iFrameX).ToString("D" + iMinDigits.ToString()) + "." + OpenedFile_Ext;
+            if (File.Exists(sFileNow))
+            {
+                if (riFrame == null) riFrame = new RImage(sFileNow, 4);
+                else bGood = riFrame.Load(sFileNow, 4);
+            }
+            //else if (File.Exists(OpenedFile_FullBaseName+"."+OpenedFile_Ext)) {
+            //    riFrame.Load(OpenedFile_FullBaseName+"."+OpenedFile_Ext);
+            //}
+            else
+            {
+                callbackNow.WriteLine("Unable to load " + RReporting.StringMessage(sFileNow, true));
+                return false;
+            }
+            callbackNow.UpdateStatus("Loading frame using image format GUID...OK");
+            return bGood;
+        }
+        private bool GotoVideoFrame(int iFrameX, RCallback callbackNow)
+        {
+            bool bGood = false;
+            if (File.Exists(tempFramePath)) File.Delete(tempFramePath);
 
+            //Next 2 lines check whether frame exists!  //TODO: make it into a separate method
+            // this.SaveFrame(tempFramePath, OpenedFile_FullBaseName+"."+OpenedFile_Ext, iFrameX);
+            // bGood=File.Exists(tempFramePath) && ((new FileInfo(tempFramePath)).Length>0);
+            // callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
+            callbackNow.UpdateStatus("GotoFrame " + iFrameX.ToString() + " (FFMPEG)...");
+            string framePrefix = OpenedFile_FullBaseName + "." + OpenedFile_Ext;
+            bmpFFMPEG = GetVideoFrameAsBitmap(framePrefix, iFrameX, callbackNow);
+            if (bmpFFMPEG == null)
+            {
+                // Status should already be set by GetVideoFrameAsBitmap in case of an error.
+                // callbackNow.UpdateStatus("Error: \"" + framePrefix + "\" frame " + iFrameX + " couldn't be loaded.");
+                return false;
+            }
+            callbackNow.UpdateStatus("GotoFrame...done load image from frame " + iFrameX.ToString());
+            // bmpFFMPEG=new Bitmap(streamIn);
+            RReporting.iDebugLevel = RReporting.DebugLevel_Max;
+            RReporting.sParticiple = "calling riFrame.Load";
+            if (riFrame == null) riFrame = new RImage("", 4);
+            bGood = riFrame.Load(bmpFFMPEG, 4);
+            try
+            {
+                bmpFFMPEG.Dispose();
+                bmpFFMPEG = null;
+            }
+            catch { }
 
+            //riFrame.Load(tempFramePath, 4);
+            /*
+            if (riFrame.Width>0&&riFrame.Height>0) {
+                if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
+                    bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                }
+            }
+            else callbackNow.UpdateStatus("Could not process frame format {Width:"+riFrame.Width+";"+"Height:"+riFrame.Height+"}");
+            */
+            //else this.tbStatus.Text="Could not find frame "+iFrameX.ToString();
+            callbackNow.UpdateStatus("Loading frame using FFMPEG..." + (bGood ? "OK" : "FAILED"));
+            return bGood;
+        }
         public bool GotoFrame(int iFrameX, int iMinDigits, RCallback callbackNow) {//formerly DrawFrame
             assertFrameInRange(iFrameX);
-            bool bGood=false;
-            string sFileNow="";
+            bool bGood = false;
+            string sFileNow = "";
             if (Debugger.IsAttached)
             {
                 // MethodBase caller = new StackFrame(1, false).GetMethod();
@@ -453,62 +515,11 @@ namespace ExpertMultimedia {
 
             System.Drawing.Imaging.ImageFormat imgfmt = RImage.ImageFormatFromExt(OpenedFile_Ext);  // Is image? Find out now.
             if (imgfmt.Guid != Guid.Empty) {//imgfmt!=System.Drawing.Imaging.ImageFormat.MemoryBmp) {//image
-                callbackNow.UpdateStatus("Loading frame using image format GUID "+imgfmt.Guid.ToString()+"...");
-                sFileNow=OpenedFile_FullBaseName+(iFrameX).ToString("D"+iMinDigits.ToString())+"."+OpenedFile_Ext;
-                if (File.Exists(sFileNow)) {
-                    if (riFrame==null) riFrame=new RImage(sFileNow,4);
-                    else bGood=riFrame.Load(sFileNow,4);
-                }
-                //else if (File.Exists(OpenedFile_FullBaseName+"."+OpenedFile_Ext)) {
-                //    riFrame.Load(OpenedFile_FullBaseName+"."+OpenedFile_Ext);
-                //}
-                else {
-                    callbackNow.WriteLine("Unable to load "+RReporting.StringMessage(sFileNow,true));
-                    return false;
-                }
-                callbackNow.UpdateStatus("Loading frame using image format GUID...OK");
+                callbackNow.UpdateStatus("Loading frame using image format GUID " + imgfmt.Guid.ToString() + "...");
+                bGood = GotoImageFrame(iFrameX, iMinDigits, callbackNow);
             }
             else { //else NOT an image, so try ffmpeg
-                if (File.Exists(tempFramePath)) File.Delete(tempFramePath);
-
-                //Next 2 lines check whether frame exists!  //TODO: make it into a separate method
-                // this.SaveFrame(tempFramePath, OpenedFile_FullBaseName+"."+OpenedFile_Ext, iFrameX);
-                // bGood=File.Exists(tempFramePath) && ((new FileInfo(tempFramePath)).Length>0);
-                // callbackNow.WriteLine("Looking for frame output..."+(bGood?"OK":"FAILED"));
-                bGood = true;
-                if (bGood) {
-                    callbackNow.UpdateStatus("GotoFrame "+iFrameX.ToString()+" (FFMPEG)...");
-                    string framePrefix = OpenedFile_FullBaseName+"."+OpenedFile_Ext;
-                    bmpFFMPEG = GetVideoFrameAsBitmap(framePrefix, iFrameX, callbackNow);
-                    if (bmpFFMPEG == null) {
-                        // Status should already be set by GetVideoFrameAsBitmap in case of an error.
-                        // callbackNow.UpdateStatus("Error: \"" + framePrefix + "\" frame " + iFrameX + " couldn't be loaded.");
-                        return false;
-                    }
-                    callbackNow.UpdateStatus("GotoFrame...done load image from frame "+iFrameX.ToString());
-                    // bmpFFMPEG=new Bitmap(streamIn);
-                    RReporting.iDebugLevel = RReporting.DebugLevel_Max;
-                    RReporting.sParticiple = "calling riFrame.Load";
-                    if (riFrame == null) riFrame = new RImage(sFileNow,4);
-                    bGood = riFrame.Load(bmpFFMPEG, 4);
-                    try {
-                        bmpFFMPEG.Dispose();
-                        bmpFFMPEG = null;
-                    }
-                    catch {}
-
-                    //riFrame.Load(tempFramePath, 4);
-                    /*
-                    if (riFrame.Width>0&&riFrame.Height>0) {
-                        if (bmpBack.Width!=riFrame.Width||bmpBack.Height!=riFrame.Height) {
-                            bmpBack=new Bitmap(riFrame.Width,riFrame.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                        }
-                    }
-                    else callbackNow.UpdateStatus("Could not process frame format {Width:"+riFrame.Width+";"+"Height:"+riFrame.Height+"}");
-                    */
-                }
-                //else this.tbStatus.Text="Could not find frame "+iFrameX.ToString();
-                callbackNow.UpdateStatus("Loading frame using FFMPEG..."+(bGood?"OK":"FAILED"));
+                bGood = GotoVideoFrame(iFrameX, callbackNow);
             }
 
             /*
